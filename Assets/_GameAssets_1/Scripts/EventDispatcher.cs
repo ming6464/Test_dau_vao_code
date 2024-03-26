@@ -183,8 +183,11 @@ public enum EventID
     UpdateBulletCountBoss,
     UpdateHPBoss,
     PlayerFire,
-    OnFinishGame,
-    ReplayGame
+    FinishGame,
+    ReplayGame,
+    UpdateHPPlayer,
+    UpdatePoint,
+    EnemyDead
 }
 
 #endregion

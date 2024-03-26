@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.SceneManagement;
 
 public class GameManager : Singleton<GameManager>
@@ -7,20 +8,28 @@ public class GameManager : Singleton<GameManager>
 
     public bool IsFinishGame;
     public string SceneGamePlayName;
+    public int Point;
     #endregion
 
     #region UNITY CORE
 
     private void OnEnable()
     {
-        this.RegisterListener(EventID.OnFinishGame,OnFinishGame);
+        this.RegisterListener(EventID.FinishGame,OnFinishGame);
         this.RegisterListener(EventID.ReplayGame,OnReplayGame);
+        this.RegisterListener(EventID.EnemyDead,OnAddPoint);
     }
 
     private void OnDisable()
     {
-        EventDispatcher.Instance.RemoveListener(EventID.OnFinishGame,OnFinishGame);
+        EventDispatcher.Instance.RemoveListener(EventID.FinishGame,OnFinishGame);
         EventDispatcher.Instance.RemoveListener(EventID.ReplayGame,OnReplayGame);
+        EventDispatcher.Instance.RemoveListener(EventID.EnemyDead,OnAddPoint);
+    }
+
+    private void Start()
+    {
+        this.PostEvent(EventID.UpdatePoint,Point);
     }
 
     #endregion
@@ -38,6 +47,12 @@ public class GameManager : Singleton<GameManager>
     {
         SceneManager.LoadScene(SceneGamePlayName);
         IsFinishGame = false;
+    }
+
+    private void OnAddPoint(object obj)
+    {
+        Point++;
+        this.PostEvent(EventID.UpdatePoint,Point);
     }
 
     #endregion

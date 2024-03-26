@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -8,7 +5,8 @@ public class PlayerController : MonoBehaviour
     #region PROPERTIES
 
     [SerializeField] private Transform _canonTf;
-    
+    [SerializeField] private LayerMask _maskMap;
+    [SerializeField] private PlayerCanonController _canonPlayer;
     #endregion
 
     #region UNITY CORE
@@ -16,6 +14,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         FollowMouse();
+        HandleFire();
     }
 
     #endregion
@@ -25,9 +24,23 @@ public class PlayerController : MonoBehaviour
 
     private void FollowMouse()
     {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        _canonTf.rotation = Quaternion.LookRotation(mousePosition - _canonTf.position);
-        _canonTf.rotation = Quaternion.Euler(0,_canonTf.rotation.eulerAngles.y,0);
+        if(_canonTf == null) return;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, _maskMap))
+        {
+            _canonTf.rotation = Quaternion.LookRotation(hit.point - _canonTf.position);
+            _canonTf.rotation = Quaternion.Euler(0,_canonTf.rotation.eulerAngles.y,0);
+        }
+
+    }
+
+    private void HandleFire()
+    {
+        if(_canonPlayer == null) return;
+        if (Input.GetMouseButtonDown(0))
+        {
+            _canonPlayer.HandleFire();
+        }
     }
     
     #region Event

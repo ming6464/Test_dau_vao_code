@@ -58,7 +58,7 @@ public class BossController : MonoBehaviour
 
         if (_currentBulletCount == 0)
         {
-            this.PostEvent(EventID.OnFinishGame,false);
+            this.PostEvent(EventID.FinishGame,false);
             return;
         }
         

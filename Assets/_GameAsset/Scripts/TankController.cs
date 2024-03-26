@@ -119,7 +119,7 @@ public class TankController : MonoBehaviour
 
         if (_bulletFireCount >= _bulletThreshold)
         {
-            this.PostEvent(EventID.OnFinishGame,true);
+            this.PostEvent(EventID.FinishGame,true);
             return;
         }
         

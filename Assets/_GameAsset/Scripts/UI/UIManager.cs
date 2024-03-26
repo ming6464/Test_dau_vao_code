@@ -13,12 +13,12 @@ public class UIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        this.RegisterListener(EventID.OnFinishGame,OnFinishGame);
+        this.RegisterListener(EventID.FinishGame,OnFinishGame);
     }
 
     private void OnDisable()
     {
-        EventDispatcher.Instance.RemoveListener(EventID.OnFinishGame,OnFinishGame);
+        EventDispatcher.Instance.RemoveListener(EventID.FinishGame,OnFinishGame);
     }
 
     #endregion

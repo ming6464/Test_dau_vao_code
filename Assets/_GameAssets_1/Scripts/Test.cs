@@ -7,13 +7,13 @@ public class Test : MonoBehaviour
     public Vector3 Angle;
 
     // Update is called once per frame
-    void Update()
-    {
-        if (Target)
-        {
-            Angle = Quaternion.LookRotation((Target.position - transform.position).normalized).eulerAngles;
-        }
-    }
+    // void Update()
+    // {
+    //     if (Target)
+    //     {
+    //         Angle = Quaternion.LookRotation((Target.position - transform.position).normalized).eulerAngles;
+    //     }
+    // }
     
     
     
@@ -30,6 +30,10 @@ public class Test : MonoBehaviour
 
     #region Event
 
+    public void OnToggleValueChange(string name)
+    {
+        Debug.Log($"Toggle value change : {name}");
+    }
 
     #endregion
     

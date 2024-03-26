@@ -288,3 +288,4 @@ MonoBehaviour:
   _bgColorImage: {fileID: 8457125174881106368}
   _EquipedUIGObj: {fileID: 8457125174776819630}
   _inventoryItemImage: {fileID: 8457125173194133064}
+  _button: {fileID: 8457125174881106371}

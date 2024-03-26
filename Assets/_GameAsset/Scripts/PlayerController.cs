@@ -24,19 +24,20 @@ public class PlayerController : MonoBehaviour
 
     private void FollowMouse()
     {
-        if(_canonTf == null) return;
+        if(!_canonTf) return;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, _maskMap))
         {
-            _canonTf.rotation = Quaternion.LookRotation(hit.point - _canonTf.position);
-            _canonTf.rotation = Quaternion.Euler(0,_canonTf.rotation.eulerAngles.y,0);
+            var rotation = Quaternion.LookRotation(hit.point - _canonTf.position);
+            rotation = Quaternion.Euler(0,rotation.eulerAngles.y,0);
+            _canonTf.rotation = rotation;
         }
 
     }
 
     private void HandleFire()
     {
-        if(_canonPlayer == null) return;
+        if(!_canonPlayer) return;
         if (Input.GetMouseButtonDown(0))
         {
             _canonPlayer.HandleFire();

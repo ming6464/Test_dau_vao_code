@@ -15,7 +15,16 @@ public class UIItemInventory : MonoBehaviour
     #endregion
 
     #region UNITY CORE
-    
+
+    public void Init(InventoryItemData data)
+    {
+        if(data == null) return;
+        if(GameConfig.Instance == null) return;
+        _bgColor = GameConfig.Instance.GetColorTypeItem(data.InventoryItemType);
+        _isEquiped = false;
+        _inventoryItemSprite = GameConfig.Instance.GetSpriteItem(data.Name_sprite);
+        LoadUI();
+    }
     #endregion
 
 
@@ -26,5 +35,23 @@ public class UIItemInventory : MonoBehaviour
 
     #endregion
 
+    private void LoadUI()
+    {
+        if (_bgColorImage)
+        {
+            _bgColorImage.color = _bgColor;
+        }
+
+        if (_EquipedUIGObj)
+        {
+            _EquipedUIGObj.SetActive(_isEquiped);
+        }
+
+        if (_inventoryItemImage)
+        {
+            _inventoryItemImage.sprite = _inventoryItemSprite;
+        }
+    }
+    
     #endregion
 }

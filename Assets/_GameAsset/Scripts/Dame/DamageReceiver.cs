@@ -52,7 +52,7 @@ public class DamageReceiver : MonoBehaviour
 
     protected virtual void OnDead()
     {
-        
+        //ignored
     }
 
     protected virtual bool CheckDead()

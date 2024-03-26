@@ -23,7 +23,6 @@ public class VFX_manager : Singleton<VFX_manager>
         private bool _haveParticle;
         private VFXKEY Vfxkey;
 
-        [Obsolete("Obsolete")]
         public VFXObject(GameObject obj, VFXKEY key)
         {
             _obj = obj;
@@ -51,11 +50,11 @@ public class VFX_manager : Singleton<VFX_manager>
             _obj.transform.forward = dir;
         }
 
-        public void SetMaterial(Material material)
+        public void SetColor(Color color)
         {
-            if(!_haveParticle || material == null) return;
-            Renderer renderer = _particle.GetComponent<Renderer>();
-            renderer.material = material;
+            if(!_haveParticle) return;
+            var main = _particle.main;
+            main.startColor = color;
         }
 
         public void Emit(int count)
@@ -90,7 +89,7 @@ public class VFX_manager : Singleton<VFX_manager>
     
     
     [Obsolete("Obsolete")]
-    public void PlayEffect(Vector3 position, Vector3 direction,Material material, VFXKEY key)
+    public void PlayEffect(Vector3 position, Vector3 direction,Color color, VFXKEY key)
     {
         VFXObject vfxObj = GetVFXObj(key);
         if (vfxObj == null)
@@ -99,12 +98,11 @@ public class VFX_manager : Singleton<VFX_manager>
         }
 
         vfxObj.SetPosRot(position, direction);
-        vfxObj.SetMaterial(material);
+        vfxObj.SetColor(color);
         vfxObj.Reset();
     }
     
-    [Obsolete("Obsolete")]
-    public void PlayEffect(Vector3 position,Material material, VFXKEY key)
+    public void PlayEffect(Vector3 position,Color color, VFXKEY key)
     {
         VFXObject vfxObj = GetVFXObj(key);
         if (vfxObj == null)
@@ -113,7 +111,7 @@ public class VFX_manager : Singleton<VFX_manager>
         }
 
         vfxObj.SetPos(position);
-        vfxObj.SetMaterial(material);
+        vfxObj.SetColor(color);
         vfxObj.Reset();
     }
 

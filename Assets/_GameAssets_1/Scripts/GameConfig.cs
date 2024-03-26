@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class GameConfig : Singleton<GameConfig>
 {
@@ -15,6 +16,20 @@ public class GameConfig : Singleton<GameConfig>
     {
         if (!_dataGame || _dataGame.InventoryItemTypeDatas == null) return new Color();
         return Array.Find(_dataGame.InventoryItemTypeDatas, x => x.InventoryItemType == type).Color;
+    }
+
+    public InventoryItemData GetRandomInventoryItemData()
+    {
+        if (_dataGame)
+        {
+            if (_dataGame.InventoryItemDatas.Length > 0)
+            {
+                int randomIndex = Random.Range(0, _dataGame.InventoryItemDatas.Length);
+                return _dataGame.InventoryItemDatas[randomIndex];
+            }
+        }
+
+        return null;
     }
     
 }

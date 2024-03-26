@@ -18,7 +18,7 @@ public class DamageSender : MonoBehaviour
     
     public virtual void SendDame(Transform objHit)
     {
-        if(objHit == null) return;
+        if(!objHit) return;
         if (objHit.TryGetComponent(out DamageReceiver damageReceiver))
         {
             SendDame(damageReceiver);
@@ -27,7 +27,7 @@ public class DamageSender : MonoBehaviour
 
     public virtual void SendDame(DamageReceiver damageReceiver)
     {
-        if(damageReceiver == null) return;
+        if(!damageReceiver) return;
         int damageRandom = Random.Range(_minDamage, _maxdamage + 1);
         damageReceiver.Reduct(damageRandom);
     }

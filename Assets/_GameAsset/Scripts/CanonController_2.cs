@@ -43,14 +43,12 @@ public class CanonController_2 : MonoBehaviour
         
     }
 
-    [Obsolete("Obsolete")]
     protected virtual void PlayEffect(Vector3 position, Vector3 direction, Transform target)
     {
-        if(VFX_manager.Instance == null || target == null) return;
-        if (target.TryGetComponent(out MaterialCustom materialCustom))
+        if(!VFX_manager.Instance || !target) return;
+        if (target.TryGetComponent(out ColorCustom colorCustom))
         {
-            if(materialCustom.Material == null) return;
-            VFX_manager.Instance.PlayEffect(position, direction,materialCustom.Material,VFXKEY.HitEffect);
+            VFX_manager.Instance.PlayEffect(position, direction,colorCustom.Color,VFXKEY.HitEffect);
         }
         
     }

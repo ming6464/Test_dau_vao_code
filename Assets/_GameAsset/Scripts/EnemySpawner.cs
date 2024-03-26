@@ -10,7 +10,6 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private float _timeMinSpawn;
     [SerializeField] private float _timeSpawn;
     [SerializeField] private Transform[] _spawnPoints;
-    [SerializeField] private Material[] _materials;
     private int priorityCount;
     #endregion
 
@@ -29,7 +28,7 @@ public class EnemySpawner : MonoBehaviour
     {
         priorityCount++;
         if(GameManager.Instance && GameManager.Instance.IsFinishGame) return;
-        if(GameObjectPooling.Instance == null || _spawnPoints.Length == 0) return;
+        if(!GameObjectPooling.Instance  || _spawnPoints.Length == 0) return;
         _timeSpawn -= _thresholdDecreasesTime;
         if (_timeSpawn < _timeMinSpawn) _timeSpawn = _timeMinSpawn;
         GameObject enemyNew = GameObjectPooling.Instance.Pull(PoolKEY.Enemy);
@@ -37,9 +36,9 @@ public class EnemySpawner : MonoBehaviour
         enemyNew.transform.parent = transform;
         enemyNew.transform.position = _spawnPoints[randomIndex].position;
         enemyNew.transform.GetComponent<NavMeshAgent>().avoidancePriority = priorityCount;
-        if (_materials.Length > 0)
+        if (GameConfig_.Instance)
         {
-            enemyNew.transform.GetComponent<EnemyMaterialSet>().SetMaterial(_materials[priorityCount % _materials.Length]);
+            enemyNew.transform.GetComponent<EnemyColorSet>().SetColor(GameConfig_.Instance.GetColor(priorityCount));
         }
         
         enemyNew.SetActive(true);

@@ -1,7 +1,6 @@
 using UnityEngine;
-using Random = UnityEngine.Random;
 
-public class EnemyMaterialSet : MaterialCustom
+public class EnemyColorSet : ColorCustom
 {
     #region PROPERTIES
     [SerializeField] private MeshRenderer[] _meshRenderers;
@@ -16,25 +15,26 @@ public class EnemyMaterialSet : MaterialCustom
 
     #region MAIN
 
-    public void SetMaterial(Material material)
+    public void SetColor(Color color)
     {
         if(_meshRenderers.Length == 0) return;
         foreach (MeshRenderer mesh in _meshRenderers)
         {
-            SetMaterial(mesh, material);
+            SetColor(mesh, color);
         }
 
         if (_lineRenderer)
         {
-            _lineRenderer.material = material;
+            _lineRenderer.material.color = color;
         }
 
-        Material = material;
+        Color = color;
     }
     
-    private void SetMaterial(MeshRenderer mesh, Material material)
+    private void SetColor(MeshRenderer mesh, Color color)
     {
-        mesh.material = material;
+        if(!mesh) return;
+        mesh.material.color = color;
     }
     
     #endregion

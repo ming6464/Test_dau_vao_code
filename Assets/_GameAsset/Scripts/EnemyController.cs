@@ -23,8 +23,6 @@ public class EnemyController : MonoBehaviour
 
     private float _angleRotationVelocity;
 
-    private bool _canMove = true;
-
     private bool _isSetUpFireCanon;
 
     private Transform _player;
@@ -104,7 +102,7 @@ public class EnemyController : MonoBehaviour
 
     private void SetUpMoveNextPosition()
     {
-        if(_player == null) return;
+        if(!_player) return;
 
         Vector3 nextPosition;
 

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using UnityEngine;
 [RequireComponent(typeof(DamageSender))]
 public class EnemyCanonController : CanonController_2
 {
@@ -98,14 +100,14 @@ public class EnemyCanonController : CanonController_2
     }
 
 
+    [Obsolete("Obsolete")]
     protected override void OnFire()
     {
         base.OnFire();
-        if(_pivotFire == null) return;
+        if(!_pivotFire) return;
 
         float timeDelayRotate = 0.5f;
-        
-        Invoke(nameof(DelayRotateOrigin),timeDelayRotate);
+        StartCoroutine(DelayRotateOrigin(timeDelayRotate));
         if (Physics.Raycast(_pivotFire.position,_pivotFire.forward,out RaycastHit hit,_rangeFire))
         {
             if(hit.transform.CompareTag("Enemy")) return;
@@ -122,12 +124,14 @@ public class EnemyCanonController : CanonController_2
         }
     }
 
-    private void DelayRotateOrigin()
+    IEnumerator DelayRotateOrigin(float time)
     {
+        yield return new WaitForSeconds(time);
         _isRotateToTarget = true;
         _angleYRotationNext = _originLocalAngleY;
         _isReturnOriginAngle = true;
     }
+
 
     #endregion
     

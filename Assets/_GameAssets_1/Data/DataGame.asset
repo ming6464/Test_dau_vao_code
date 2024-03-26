@@ -64,10 +64,10 @@ MonoBehaviour:
     SpriteItem: {fileID: 21300000, guid: 5b0623cbcec58bd44a0fb04fff3a0b42, type: 3}
   InventoryItemTypeDatas:
   - InventoryItemType: 0
-    Color: {r: 1, g: 0.6224198, b: 0.1830188, a: 0}
+    Color: {r: 1, g: 0.6224198, b: 0.1830188, a: 1}
   - InventoryItemType: 1
-    Color: {r: 0.72835714, g: 0.37169808, b: 1, a: 0}
+    Color: {r: 0.72835714, g: 0.37169808, b: 1, a: 1}
   - InventoryItemType: 2
-    Color: {r: 0.2396226, g: 0.5243368, b: 1, a: 0}
+    Color: {r: 0.2396226, g: 0.5243368, b: 1, a: 1}
   - InventoryItemType: 3
-    Color: {r: 0.44872326, g: 1, b: 0.40943396, a: 0}
+    Color: {r: 0.44872326, g: 1, b: 0.40943396, a: 1}

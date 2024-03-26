@@ -39,11 +39,10 @@ public class PlayerCanonController : CanonController_2
     protected override void OnFire()
     {
         base.OnFire();
-        if(_pivotFire == null) return;
+        if(!_pivotFire) return;
         if (Physics.Raycast(_pivotFire.position,_pivotFire.forward,out RaycastHit hit,_rangeFire))
         {
             _damageSender.SendDame(hit.transform);
-            Debug.Log($"play fire {hit.transform.name}");
             if (_lineBullet)
             {
                 _lineBullet.positionCount = 2;

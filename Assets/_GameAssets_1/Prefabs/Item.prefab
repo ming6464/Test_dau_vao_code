@@ -285,3 +285,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b2917a9c1eaea44abf58a333b0ef39d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _bgColorImage: {fileID: 8457125174881106368}
+  _EquipedUIGObj: {fileID: 8457125174776819630}
+  _inventoryItemImage: {fileID: 8457125173194133064}

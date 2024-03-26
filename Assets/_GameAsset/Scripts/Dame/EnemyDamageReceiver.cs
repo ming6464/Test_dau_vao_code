@@ -7,7 +7,7 @@ public class EnemyDamageReceiver : DamageReceiver
 
     [SerializeField] private HealUIEnemy _healUI;
 
-    private MaterialCustom _materialCustom;
+    private ColorCustom _colorCustom;
     
     #endregion
 
@@ -15,7 +15,7 @@ public class EnemyDamageReceiver : DamageReceiver
 
     private void Start()
     {
-        TryGetComponent(out _materialCustom);
+        TryGetComponent(out _colorCustom);
     }
 
     #endregion
@@ -23,13 +23,14 @@ public class EnemyDamageReceiver : DamageReceiver
 
     #region MAIN
 
+    [Obsolete("Obsolete")]
     protected override void OnDead()
     {
         base.OnDead();
         this.PostEvent(EventID.EnemyDead);
-        if (VFX_manager.Instance && _materialCustom && _materialCustom.Material)
+        if (VFX_manager.Instance && _colorCustom)
         {
-            VFX_manager.Instance.PlayEffect(transform.position,_materialCustom.Material,VFXKEY.EnemyDead);
+            VFX_manager.Instance.PlayEffect(transform.position,_colorCustom.Color,VFXKEY.EnemyDead);
         }
         if (GameObjectPooling.Instance)
         {

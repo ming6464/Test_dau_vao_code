@@ -96,44 +96,82 @@ public class C_Inventory : MonoBehaviour
 
     private void ButtonInventoryClick(int id,InventoryItemType type,bool isEquipped)
     {
-        Debug.Log($"id : {id} / type : {type} / isEquipped : {isEquipped}");
         if(ItemUIInfos.Count == 0) return;
         int findIndexItemHandle = ItemUIInfos.FindIndex(x => x.UIItemInventory.ID == id);
         if (findIndexItemHandle < 0) return;
         ItemUIInfo itemUIInfoHandle = ItemUIInfos[findIndexItemHandle];
-        itemUIInfoHandle.UIItemInventory.HandleOnClick();
+        
         if (isEquipped)
         {
             List<ItemUIInfo> listItemEquipped = ItemUIInfos.FindAll(x => x.UIItemInventory.IsEquipped);
-            int findIndexUnEquipped = listItemEquipped.FindIndex(x => x.UIItemInventory.InventoryType == type);
-            if (findIndexUnEquipped >= 0)
+            int indexItemEquipped = 0;
+            if (listItemEquipped.Count > 0)
             {
-                ItemUIInfo itemUIInfoUnEquipped = listItemEquipped[findIndexUnEquipped];
-                itemUIInfoUnEquipped.UIItemInventory.OnUnEquipped();
-                // itemUIInfoUnEquipped.ItemTf.set
-                // if (_machineGunTab.Content)
-                // {
-                //     _machineGunTab.Content.set
-                // }
+                indexItemEquipped = -1;
+                int findIndexUnEquipped = -1;
+                for (int i = 0; i < listItemEquipped.Count; i++)
+                {
+                    ItemUIInfo itemList = listItemEquipped[i];
+                    if(!itemList.UIItemInventory.IsEquipped) break;
+                    if (itemList.UIItemInventory.InventoryType == type)
+                    {
+                        findIndexUnEquipped = i;
+                    }
+
+                    if (itemUIInfoHandle.UIItemInventory.Quality < itemList.UIItemInventory.Quality)
+                    {
+                        indexItemEquipped = i;
+                    }
+                }
+                if (findIndexUnEquipped >= 0)
+                {
+                    ItemUIInfo itemUIInfoUnEquipped = listItemEquipped[findIndexUnEquipped];
+                    itemUIInfoUnEquipped.UIItemInventory.OnUnEquipped();
+                    itemUIInfoUnEquipped.ItemTf.SetSiblingIndex(GetIndexInventoryCalculator(itemUIInfoUnEquipped.IndexDefault, listItemEquipped.Count));
+                    if (itemUIInfoUnEquipped.UIItemInventory.Quality > itemUIInfoHandle.UIItemInventory.Quality)
+                    {
+                        indexItemEquipped--;
+                    }
+                }
+
+                indexItemEquipped++;
             }
+            itemUIInfoHandle.ItemTf.SetSiblingIndex(indexItemEquipped);
+            itemUIInfoHandle.UIItemInventory.HandleOnClick();
         }
         else
         {
-            
+            List<ItemUIInfo> listItemEquipped = ItemUIInfos.FindAll(x => x.UIItemInventory.IsEquipped);
+            itemUIInfoHandle.UIItemInventory.HandleOnClick();
+            itemUIInfoHandle.ItemTf.SetSiblingIndex(GetIndexInventoryCalculator(itemUIInfoHandle.IndexDefault,listItemEquipped.Count));
         }
+        
     }
 
-    private int GetIndexInventoryCalculator(int indexDefault)
+    private int GetIndexInventoryCalculator(int indexDefault, int weaponEquippedCount)
     {
         if (ItemUIInfos.Count > 0)
         {
-            for (int i = ItemUIInfos.Count - 1; i >= 0; i--)
+            int startIndex = indexDefault + weaponEquippedCount;
+            if (startIndex >= ItemUIInfos.Count)
             {
-                if (indexDefault > ItemUIInfos[i].IndexDefault) return i;
+                startIndex = ItemUIInfos.Count - 1;
+            }
+            
+            for (int i = startIndex; i >= 0; i--)
+            {
+                if (indexDefault > ItemUIInfos[i].IndexDefault)
+                {
+                    return i + 1;
+                }
+                if (ItemUIInfos[i].UIItemInventory.IsEquipped)
+                {
+                    return i + 1;
+                }
             } 
         }
         
-        return - 1;
+        return 0;
     }
 
     #endregion

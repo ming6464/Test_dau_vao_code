@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,12 +14,25 @@ public class C_Inventory : MonoBehaviour
         public GameObject TabOn;
         public GameObject TabOff;
     }
+    
+    [Serializable]
+    public struct ItemUIInfo
+    {
+        public int IndexDefault;
+        public UIItemInventory UIItemInventory;
+        public Transform ItemTf;
+    }
+    
     #region PROPERTIES
 
     [SerializeField] private TabPanelInfo _machineGunTab;
     [SerializeField] private TabPanelInfo _TicketTab;
     [SerializeField] private TabPanelInfo _SupportedTab;
     [SerializeField] private int _itemMachineSpawnCount;
+    
+    
+    private List<ItemUIInfo> ItemUIInfos;
+
     #endregion
 
     #region UNITY CORE
@@ -46,22 +60,33 @@ public class C_Inventory : MonoBehaviour
     {
         if (GameConfig.Instance && _itemMachineSpawnCount > 0 && _machineGunTab.ItemPrefab  && _machineGunTab.Content)
         {
+            ItemUIInfos = new List<ItemUIInfo>();
             InventoryItemData[] itemDatas = new InventoryItemData[_itemMachineSpawnCount];
             for (int i = 0; i < _itemMachineSpawnCount; i++)
             {
                 itemDatas[i] = GameConfig.Instance.GetRandomInventoryItemData();
             }
 
-            foreach (InventoryItemData itemData in itemDatas.OrderBy(x => -x.Quality))
+            itemDatas = itemDatas.OrderBy(x => -x.Quality).ToArray();
+
+            if (_machineGunTab.ItemPrefab.TryGetComponent(out UIItemInventory _))
             {
-                GameObject itemNew = Instantiate(_machineGunTab.ItemPrefab, _machineGunTab.Content, false);
-                if (itemNew.TryGetComponent(out UIItemInventory uiItemInventory))
+                for (int i = 0; i < itemDatas.Length; i ++)
                 {
-                    uiItemInventory.Init(itemData);
+                    GameObject itemNew = Instantiate(_machineGunTab.ItemPrefab, _machineGunTab.Content, false);
+                    UIItemInventory uiItemInventory = itemNew.GetComponent<UIItemInventory>();
+                    uiItemInventory.Init(itemDatas[i]);
+                    if (itemNew.TryGetComponent(out Button button))
+                    {
+                        button.onClick.AddListener(delegate { ButtonInventoryClick(uiItemInventory.ID,uiItemInventory.InventoryType,!uiItemInventory.IsEquipped); });
+                    }
+                    ItemUIInfos.Add(new ItemUIInfo{IndexDefault = i,UIItemInventory = uiItemInventory,ItemTf = itemNew.transform});
                 }
             }
+            
         }
     }
+    
 
     #endregion
 
@@ -69,6 +94,47 @@ public class C_Inventory : MonoBehaviour
 
     #region Event
 
+    private void ButtonInventoryClick(int id,InventoryItemType type,bool isEquipped)
+    {
+        Debug.Log($"id : {id} / type : {type} / isEquipped : {isEquipped}");
+        if(ItemUIInfos.Count == 0) return;
+        int findIndexItemHandle = ItemUIInfos.FindIndex(x => x.UIItemInventory.ID == id);
+        if (findIndexItemHandle < 0) return;
+        ItemUIInfo itemUIInfoHandle = ItemUIInfos[findIndexItemHandle];
+        itemUIInfoHandle.UIItemInventory.HandleOnClick();
+        if (isEquipped)
+        {
+            List<ItemUIInfo> listItemEquipped = ItemUIInfos.FindAll(x => x.UIItemInventory.IsEquipped);
+            int findIndexUnEquipped = listItemEquipped.FindIndex(x => x.UIItemInventory.InventoryType == type);
+            if (findIndexUnEquipped >= 0)
+            {
+                ItemUIInfo itemUIInfoUnEquipped = listItemEquipped[findIndexUnEquipped];
+                itemUIInfoUnEquipped.UIItemInventory.OnUnEquipped();
+                // itemUIInfoUnEquipped.ItemTf.set
+                // if (_machineGunTab.Content)
+                // {
+                //     _machineGunTab.Content.set
+                // }
+            }
+        }
+        else
+        {
+            
+        }
+    }
+
+    private int GetIndexInventoryCalculator(int indexDefault)
+    {
+        if (ItemUIInfos.Count > 0)
+        {
+            for (int i = ItemUIInfos.Count - 1; i >= 0; i--)
+            {
+                if (indexDefault > ItemUIInfos[i].IndexDefault) return i;
+            } 
+        }
+        
+        return - 1;
+    }
 
     #endregion
 

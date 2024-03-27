@@ -9,7 +9,7 @@ public class UIItemEquipped : MonoBehaviour
     [SerializeField] private InventoryItemType _ItemType;
     [SerializeField] private Image _bgImage;
     [SerializeField] private Image _iconItemEquiped;
-
+    
     #endregion
 
     #region UNITY CORE
@@ -72,5 +72,11 @@ public class UIItemEquipped : MonoBehaviour
     #endregion
 
     #endregion
+    
+}
+
+[Serializable]
+public class MessUIItemEquippedFeedback
+{
     
 }

@@ -67,7 +67,7 @@ public class UIItemInventory : MonoBehaviour
         if (!_isEquipped)
         {
             OnEquipped();
-            this.PostEvent(EventID.EquippedWeapon , _data);
+            this.PostEvent(EventID.EquippedWeapon , new MessUIItemEquipped{ID = _id,Type = InventoryType,Name_sprite = _data.Name_sprite, Quality = _data.Quality});
         }
         else
         {
@@ -76,7 +76,7 @@ public class UIItemInventory : MonoBehaviour
         }
     }
     
-    private void OnEquipped()
+    public void OnEquipped()
     {
         _isEquipped = true;
         if (_EquipedUIGObj)

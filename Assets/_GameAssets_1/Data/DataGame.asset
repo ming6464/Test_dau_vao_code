@@ -20,52 +20,154 @@ MonoBehaviour:
     Quality: 0
     InventoryItemType: 0
   - Id: 1
+    Name: Pencil
+    Description: "B\xFAt ch\xEC"
+    Name_sprite: pencil
+    Quality: 1
+    InventoryItemType: 0
+  - Id: 2
+    Name: Pencil
+    Description: "B\xFAt ch\xEC"
+    Name_sprite: pencil
+    Quality: 2
+    InventoryItemType: 0
+  - Id: 3
+    Name: Pencil
+    Description: "B\xFAt ch\xEC"
+    Name_sprite: pencil
+    Quality: 3
+    InventoryItemType: 0
+  - Id: 4
+    Name: Pistol
+    Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
+    Name_sprite: gun1
+    Quality: 0
+    InventoryItemType: 0
+  - Id: 5
     Name: Pistol
     Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
     Name_sprite: gun1
     Quality: 1
     InventoryItemType: 0
-  - Id: 2
+  - Id: 6
+    Name: Pistol
+    Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
+    Name_sprite: gun1
+    Quality: 2
+    InventoryItemType: 0
+  - Id: 7
+    Name: Pistol
+    Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
+    Name_sprite: gun1
+    Quality: 3
+    InventoryItemType: 0
+  - Id: 8
     Name: MP5
     Description: "S\xFAng ti\u1EC3u li\xEAn"
     Name_sprite: gun2
-    Quality: 2
+    Quality: 0
     InventoryItemType: 3
-  - Id: 3
+  - Id: 9
+    Name: MP5
+    Description: "S\xFAng ti\u1EC3u li\xEAn"
+    Name_sprite: gun2
+    Quality: 1
+    InventoryItemType: 3
+  - Id: 10
+    Name: Special Pistol
+    Description: "S\xFAng l\u1EE5c \u0111\u1EB7c bi\u1EC7t"
+    Name_sprite: gun3
+    Quality: 1
+    InventoryItemType: 2
+  - Id: 11
     Name: Special Pistol
     Description: "S\xFAng l\u1EE5c \u0111\u1EB7c bi\u1EC7t"
     Name_sprite: gun3
     Quality: 3
     InventoryItemType: 2
-  - Id: 4
+  - Id: 12
     Name: AK47
     Description: "S\xFAng tr\u01B0\u1EDDng Ak47"
     Name_sprite: gun4
     Quality: 0
     InventoryItemType: 1
-  - Id: 5
+  - Id: 13
     Name: Gatting gun
     Description: "S\xFAng m\xE1y Gatting"
     Name_sprite: gun5
     Quality: 2
     InventoryItemType: 4
-  - Id: 6
+  - Id: 14
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
+    Quality: 0
+    InventoryItemType: 4
+  - Id: 15
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
+    Quality: 1
+    InventoryItemType: 4
+  - Id: 16
     Name: MachineGun
     Description: "S\xFAng m\xE1y machine"
     Name_sprite: MachineGun
     Quality: 2
     InventoryItemType: 4
-  - Id: 7
+  - Id: 17
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
+    Quality: 2
+    InventoryItemType: 4
+  - Id: 18
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 0
+    InventoryItemType: 3
+  - Id: 19
     Name: MicroMachine1
     Description: "S\xFAng m\xE1y MicroMachine1"
     Name_sprite: microMachine1
     Quality: 1
     InventoryItemType: 3
-  - Id: 8
+  - Id: 20
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 2
+    InventoryItemType: 3
+  - Id: 21
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 3
+    InventoryItemType: 3
+  - Id: 22
     Name: MicroMachine2
     Description: "S\xFAng m\xE1y MicroMachine1"
     Name_sprite: microMachine2
-    Quality: 3
+    Quality: 0
+    InventoryItemType: 3
+  - Id: 23
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 1
+    InventoryItemType: 3
+  - Id: 24
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 2
+    InventoryItemType: 3
+  - Id: 25
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 1
     InventoryItemType: 3
   - Id: 9
     Name: rifle1

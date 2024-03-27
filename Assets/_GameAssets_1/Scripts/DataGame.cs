@@ -37,6 +37,12 @@ public enum InventoryItemType
 }
 
 [Serializable]
+public enum TabInventoryKey
+{
+    All = 0,Pistol = 1,Rifle = 2,Shotgun = 3,Microgun = 4,MachineGun = 5
+}
+
+[Serializable]
 public class QualityData
 {
     public int Quality;

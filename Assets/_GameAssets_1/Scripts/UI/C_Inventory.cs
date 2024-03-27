@@ -31,7 +31,7 @@ public class C_Inventory : MonoBehaviour
     [SerializeField] private int _itemMachineSpawnCount;
     
     
-    private List<ItemUIInfo> ItemUIInfos;
+    private List<ItemUIInfo> _itemUIInfos;
 
     #endregion
 
@@ -48,11 +48,24 @@ public class C_Inventory : MonoBehaviour
                 gridLayout.cellSize = new Vector2(widthItem,widthItem);
             }
         }
+
+        Init();
+    }
+
+    private void OnEnable()
+    {
+        this.RegisterListener(EventID.ClickWeaponEquippedUI,OnUnEquippedWeapon);
+        this.RegisterListener(EventID.OpenTabInventory,OnOpenTabInventory);
+    }
+
+    private void OnDisable()
+    {
+        EventDispatcher.Instance.RemoveListener(EventID.ClickWeaponEquippedUI,OnUnEquippedWeapon);
+        EventDispatcher.Instance.RemoveListener(EventID.OpenTabInventory,OnOpenTabInventory);
     }
 
     private void Start()
     {
-        Init();
         MachineGunTab_Button_on_click();
     }
 
@@ -60,27 +73,31 @@ public class C_Inventory : MonoBehaviour
     {
         if (GameConfig.Instance && _itemMachineSpawnCount > 0 && _machineGunTab.ItemPrefab  && _machineGunTab.Content)
         {
-            ItemUIInfos = new List<ItemUIInfo>();
-            InventoryItemData[] itemDatas = new InventoryItemData[_itemMachineSpawnCount];
+            _itemUIInfos = new List<ItemUIInfo>();
+            List<InventoryItemData> itemDatas = new List<InventoryItemData>();
             for (int i = 0; i < _itemMachineSpawnCount; i++)
             {
-                itemDatas[i] = GameConfig.Instance.GetRandomInventoryItemData();
+                InventoryItemData itemUIInfo = GameConfig.Instance.GetInventoryItemData(i);
+                if(itemUIInfo == null) return;
+                itemDatas.Add(itemUIInfo);
             }
 
-            itemDatas = itemDatas.OrderBy(x => -x.Quality).ToArray();
+            itemDatas = itemDatas.OrderBy(x => -x.Quality).ToList();
 
             if (_machineGunTab.ItemPrefab.TryGetComponent(out UIItemInventory _))
             {
-                for (int i = 0; i < itemDatas.Length; i ++)
+                for (int i = 0; i < itemDatas.Count; i ++)
                 {
                     GameObject itemNew = Instantiate(_machineGunTab.ItemPrefab, _machineGunTab.Content, false);
+                    itemNew.name = i.ToString();
                     UIItemInventory uiItemInventory = itemNew.GetComponent<UIItemInventory>();
                     uiItemInventory.Init(itemDatas[i]);
                     if (itemNew.TryGetComponent(out Button button))
                     {
                         button.onClick.AddListener(delegate { ButtonInventoryClick(uiItemInventory.ID,uiItemInventory.InventoryType,!uiItemInventory.IsEquipped); });
                     }
-                    ItemUIInfos.Add(new ItemUIInfo{IndexDefault = i,UIItemInventory = uiItemInventory,ItemTf = itemNew.transform});
+                    itemNew.SetActive(false);
+                    _itemUIInfos.Add(new ItemUIInfo{IndexDefault = i,UIItemInventory = uiItemInventory,ItemTf = itemNew.transform});
                 }
             }
             
@@ -94,17 +111,66 @@ public class C_Inventory : MonoBehaviour
 
     #region Event
 
+    private void OnUnEquippedWeapon(object obj)
+    {
+        if(obj == null) return;
+        MessUIItemEquipped mess = (MessUIItemEquipped)obj;
+        ButtonInventoryClick(mess.ID,mess.Type,false);
+    }
+
+    private void OnOpenTabInventory(object obj)
+    {
+        if(obj == null) return;
+        TabInventoryKey tabKey = (TabInventoryKey)obj;
+        InventoryItemType typeInven = InventoryItemType.Pistol;
+        if (tabKey != TabInventoryKey.All)
+        {
+            switch (tabKey)
+            {
+                case TabInventoryKey.Pistol:
+                    typeInven = InventoryItemType.Pistol;
+                    break;
+                case TabInventoryKey.Rifle:
+                    typeInven = InventoryItemType.Rifle;
+                    break;
+                case TabInventoryKey.Shotgun:
+                    typeInven = InventoryItemType.Shotgun;
+                    break;
+                case TabInventoryKey.Microgun:
+                    typeInven = InventoryItemType.Microgun;
+                    break;
+                case TabInventoryKey.MachineGun:
+                    typeInven = InventoryItemType.MachineGun;
+                    break;
+                
+            }
+        }
+
+        foreach (ItemUIInfo itemUIInfo in _itemUIInfos)
+        {
+            bool check = true;
+            if (tabKey != TabInventoryKey.All)
+            {
+                check = itemUIInfo.UIItemInventory.InventoryType == typeInven;
+            }
+
+            if (itemUIInfo.ItemTf)
+            {
+                itemUIInfo.ItemTf.gameObject.SetActive(check);
+            }
+        }
+    }
+    
     private void ButtonInventoryClick(int id,InventoryItemType type,bool isEquipped)
     {
-        if(ItemUIInfos.Count == 0) return;
-        int findIndexItemHandle = ItemUIInfos.FindIndex(x => x.UIItemInventory.ID == id);
+        if(_itemUIInfos.Count == 0) return;
+        int findIndexItemHandle = _itemUIInfos.FindIndex(x => x.UIItemInventory.ID == id);
         if (findIndexItemHandle < 0) return;
-        ItemUIInfo itemUIInfoHandle = ItemUIInfos[findIndexItemHandle];
-        
+        ItemUIInfo itemUIInfoHandle = _itemUIInfos[findIndexItemHandle];
+        int indexItemEquipped = 0;
         if (isEquipped)
         {
-            List<ItemUIInfo> listItemEquipped = ItemUIInfos.FindAll(x => x.UIItemInventory.IsEquipped);
-            int indexItemEquipped = 0;
+            List<ItemUIInfo> listItemEquipped = _itemUIInfos.FindAll(x => x.UIItemInventory.IsEquipped);
             if (listItemEquipped.Count > 0)
             {
                 indexItemEquipped = -1;
@@ -118,7 +184,7 @@ public class C_Inventory : MonoBehaviour
                         findIndexUnEquipped = i;
                     }
 
-                    if (itemUIInfoHandle.UIItemInventory.Quality < itemList.UIItemInventory.Quality)
+                    if (itemUIInfoHandle.UIItemInventory.Quality <= itemList.UIItemInventory.Quality)
                     {
                         indexItemEquipped = i;
                     }
@@ -126,9 +192,24 @@ public class C_Inventory : MonoBehaviour
                 if (findIndexUnEquipped >= 0)
                 {
                     ItemUIInfo itemUIInfoUnEquipped = listItemEquipped[findIndexUnEquipped];
+                    int indexNew =
+                        GetIndexInventoryCalculator(itemUIInfoUnEquipped.IndexDefault);
+                    itemUIInfoUnEquipped.ItemTf.SetSiblingIndex(indexNew);
+
+                    if (indexNew > findIndexUnEquipped)
+                    {
+                        if (indexNew == _itemUIInfos.Count - 1)
+                        {
+                            _itemUIInfos.Add(itemUIInfoUnEquipped);
+                        }
+                        else
+                        {
+                            _itemUIInfos.Insert(indexNew + 1,itemUIInfoUnEquipped);
+                        }
+                        _itemUIInfos.RemoveAt(findIndexUnEquipped);                          
+                    }
                     itemUIInfoUnEquipped.UIItemInventory.OnUnEquipped();
-                    itemUIInfoUnEquipped.ItemTf.SetSiblingIndex(GetIndexInventoryCalculator(itemUIInfoUnEquipped.IndexDefault, listItemEquipped.Count));
-                    if (itemUIInfoUnEquipped.UIItemInventory.Quality > itemUIInfoHandle.UIItemInventory.Quality)
+                    if (itemUIInfoUnEquipped.UIItemInventory.Quality >= itemUIInfoHandle.UIItemInventory.Quality)
                     {
                         indexItemEquipped--;
                     }
@@ -137,36 +218,34 @@ public class C_Inventory : MonoBehaviour
                 indexItemEquipped++;
             }
             itemUIInfoHandle.ItemTf.SetSiblingIndex(indexItemEquipped);
-            itemUIInfoHandle.UIItemInventory.HandleOnClick();
         }
         else
         {
-            List<ItemUIInfo> listItemEquipped = ItemUIInfos.FindAll(x => x.UIItemInventory.IsEquipped);
-            itemUIInfoHandle.UIItemInventory.HandleOnClick();
-            itemUIInfoHandle.ItemTf.SetSiblingIndex(GetIndexInventoryCalculator(itemUIInfoHandle.IndexDefault,listItemEquipped.Count));
+            indexItemEquipped = GetIndexInventoryCalculator(itemUIInfoHandle.IndexDefault);
+            itemUIInfoHandle.ItemTf.SetSiblingIndex(indexItemEquipped);
         }
+
+        itemUIInfoHandle.UIItemInventory.HandleOnClick();
+        
+        _itemUIInfos.Remove(itemUIInfoHandle);
+        _itemUIInfos.Insert(indexItemEquipped,itemUIInfoHandle);
         
     }
 
-    private int GetIndexInventoryCalculator(int indexDefault, int weaponEquippedCount)
+    private int GetIndexInventoryCalculator(int indexDefault)
     {
-        if (ItemUIInfos.Count > 0)
+        if (_itemUIInfos.Count > 0)
         {
-            int startIndex = indexDefault + weaponEquippedCount;
-            if (startIndex >= ItemUIInfos.Count)
+            int startIndex = indexDefault + 5;
+            if (startIndex >= _itemUIInfos.Count)
             {
-                startIndex = ItemUIInfos.Count - 1;
+                startIndex = _itemUIInfos.Count - 1;
             }
-            
             for (int i = startIndex; i >= 0; i--)
             {
-                if (indexDefault > ItemUIInfos[i].IndexDefault)
+                if (_itemUIInfos[i].IndexDefault < indexDefault || _itemUIInfos[i].UIItemInventory.IsEquipped)
                 {
-                    return i + 1;
-                }
-                if (ItemUIInfos[i].UIItemInventory.IsEquipped)
-                {
-                    return i + 1;
+                    return i;
                 }
             } 
         }

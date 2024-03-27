@@ -7,22 +7,18 @@ public class UIBottom : MonoBehaviour
     [Serializable]
     private struct TabUIBottomInfo
     {
-        public GameObject Tab;
         public Toggle Toggle;
         public LayoutElement LayoutElement;
         public GameObject NameText;
+        public TabInventoryKey Key;
     }
     #region PROPERTIES
-    [SerializeField] private TabUIBottomInfo _gunTabInfo;
-    [SerializeField] private TabUIBottomInfo _inventoryTabInfo;
-    [SerializeField] private TabUIBottomInfo _chestTabInfo;
-    [SerializeField] private TabUIBottomInfo _mapTabInfo;
-    [SerializeField] private TabUIBottomInfo _shopTabInfo;
+    [SerializeField] private TabUIBottomInfo[] _tabInfos;
 
     [SerializeField] private float _widthRatioToggleOn;
     [SerializeField] private float _widthRatioToggleOff;
 
-    private int CurrentIndexOn = -1;
+    private int _currentIndexOn = -1;
     
     private float _widthToggleOnCalculated;
     private float _widthToggleOffCalculated;
@@ -35,22 +31,24 @@ public class UIBottom : MonoBehaviour
     {
         float ratio = 1920f / Screen.height;
         float widthCalculated = Screen.width * ratio;
-        float widthPerCell = (widthCalculated - 24) / (_widthRatioToggleOn + _widthRatioToggleOff * 4);
+        float widthPerCell = (widthCalculated - 24) / (_widthRatioToggleOn + _widthRatioToggleOff * 5);
         _widthToggleOnCalculated = widthPerCell * _widthRatioToggleOn;
         _widthToggleOffCalculated = widthPerCell * _widthRatioToggleOff;
     }
 
     private void Start()
     {
-        if (_inventoryTabInfo.Toggle)
+        int indexTabAll = Array.FindIndex(_tabInfos, x => x.Key == TabInventoryKey.All);
+        if (indexTabAll >= 0 && _tabInfos[indexTabAll].Toggle)
         {
-            _inventoryTabInfo.Toggle.isOn = true;
+            _tabInfos[indexTabAll].Toggle.isOn = true;
         }
-        ToggleChangeValue(0);
-        ToggleChangeValue(1);
-        ToggleChangeValue(2);
-        ToggleChangeValue(3);
-        ToggleChangeValue(4);
+        ToggleChangeValue(TabInventoryKey.All);
+        ToggleChangeValue(TabInventoryKey.Microgun);
+        ToggleChangeValue(TabInventoryKey.Pistol);
+        ToggleChangeValue(TabInventoryKey.Rifle);
+        ToggleChangeValue(TabInventoryKey.Shotgun);
+        ToggleChangeValue(TabInventoryKey.MachineGun);
     }
 
     #endregion
@@ -61,30 +59,17 @@ public class UIBottom : MonoBehaviour
 
     public void ToggleChangeValue(int index)
     {
-        switch (index)
-        {
-            case 0:
-                ChangeWidthToggle(_gunTabInfo,index);
-                break;
-            case 1:
-                ChangeWidthToggle(_inventoryTabInfo,index);
-                break;
-            case 2:
-                ChangeWidthToggle(_chestTabInfo,index);
-                break;
-            case 3:
-                ChangeWidthToggle(_mapTabInfo,index);
-                break;
-            case 4:
-                ChangeWidthToggle(_shopTabInfo,index);
-                break;
-        }
+        ToggleChangeValue((TabInventoryKey)index);
     }
 
-    private void ChangeWidthToggle(TabUIBottomInfo tabInfo,int index = -1)
+    public void ToggleChangeValue(TabInventoryKey key)
     {
+        int tabIndex = Array.FindIndex(_tabInfos, x => x.Key == key);
+        if(tabIndex < 0) return;
+        TabUIBottomInfo tabInfo = _tabInfos[tabIndex];
         if(!tabInfo.LayoutElement || !tabInfo.Toggle) return;
-        if(tabInfo.Toggle.isOn && CurrentIndexOn == index) return;
+        int index = (int)tabInfo.Key;
+        if(tabInfo.Toggle.isOn && _currentIndexOn == index) return;
         tabInfo.LayoutElement.minWidth = _widthToggleOffCalculated;
         tabInfo.LayoutElement.preferredWidth = tabInfo.Toggle.isOn ? _widthToggleOnCalculated : _widthToggleOffCalculated;
         if (tabInfo.NameText)
@@ -92,14 +77,15 @@ public class UIBottom : MonoBehaviour
             tabInfo.NameText.SetActive(tabInfo.Toggle.isOn);
         }
 
-        if (tabInfo.Tab)
+        if (tabInfo.Toggle.isOn)
         {
-            tabInfo.Tab.SetActive(tabInfo.Toggle.isOn);
+            _currentIndexOn = index;
+            this.PostEvent(EventID.OpenTabInventory,key);
         }
-        if (index >= 0 && tabInfo.Toggle.isOn) CurrentIndexOn = index;
     }
 
     #endregion
 
     #endregion
 }
+

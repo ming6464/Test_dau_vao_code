@@ -186,7 +186,9 @@ public enum EventID
     UpdatePoint,
     EnemyDead,
     EquippedWeapon,
-    UnEquippedWeapon
+    UnEquippedWeapon,
+    ClickWeaponEquippedUI,
+    OpenTabInventory
 }
 
 #endregion

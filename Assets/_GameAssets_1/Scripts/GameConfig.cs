@@ -34,4 +34,17 @@ public class GameConfig : Singleton<GameConfig>
         return null;
     }
     
+    public InventoryItemData GetInventoryItemData(int i)
+    {
+        if (_dataGame)
+        {
+            if (_dataGame.InventoryItemDatas.Length > i)
+            {
+                return _dataGame.InventoryItemDatas[i];
+            }
+        }
+
+        return null;
+    }
+    
 }

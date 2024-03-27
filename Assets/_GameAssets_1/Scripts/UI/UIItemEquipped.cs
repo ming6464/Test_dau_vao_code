@@ -9,6 +9,9 @@ public class UIItemEquipped : MonoBehaviour
     [SerializeField] private InventoryItemType _ItemType;
     [SerializeField] private Image _bgImage;
     [SerializeField] private Image _iconItemEquiped;
+
+    private int _currentWeaponId;
+    private bool _isHasWeapon;
     
     #endregion
 
@@ -35,18 +38,20 @@ public class UIItemEquipped : MonoBehaviour
     private void OnCheckEquippedWeaponUI(object obj)
     {
         if(obj == null) return;
-        InventoryItemData inventoryItemData = (InventoryItemData)obj;
-        if(inventoryItemData.InventoryItemType != _ItemType) return;
+        MessUIItemEquipped mess = (MessUIItemEquipped)obj;
+        if(mess.Type != _ItemType) return;
+        _currentWeaponId = mess.ID;
+        _isHasWeapon = true;
         if (GameConfig.Instance)
         {
             if (_bgImage && GameConfig.Instance)
             {
-                _bgImage.color = GameConfig.Instance.GetColorWithQuality(inventoryItemData.Quality);
+                _bgImage.color = GameConfig.Instance.GetColorWithQuality(mess.Quality);
             }
 
             if (_iconItemEquiped)
             {
-                _iconItemEquiped.sprite = GameConfig.Instance.GetSpriteItem(inventoryItemData.Name_sprite);
+                _iconItemEquiped.sprite = GameConfig.Instance.GetSpriteItem(mess.Name_sprite);
             } 
         }
         
@@ -66,8 +71,14 @@ public class UIItemEquipped : MonoBehaviour
         {
             _iconItemEquiped.sprite = null;
         }
+        _isHasWeapon = false;
     }
 
+    public void WeaponEquippedUIOnClick()
+    {
+        if(!_isHasWeapon ) return;
+        this.PostEvent(EventID.ClickWeaponEquippedUI, new MessUIItemEquipped{ID = _currentWeaponId,Type = _ItemType});
+    }
 
     #endregion
 
@@ -76,7 +87,10 @@ public class UIItemEquipped : MonoBehaviour
 }
 
 [Serializable]
-public class MessUIItemEquippedFeedback
+public class MessUIItemEquipped
 {
-    
+    public int ID;
+    public InventoryItemType Type;
+    public int Quality;
+    public string Name_sprite;
 }

@@ -6,7 +6,7 @@ public class DataGame : ScriptableObject
 {
     public InventoryItemData[] InventoryItemDatas;
     public SpriteItemData[] SpriteItemDatas;
-    public InventoryItemTypeData[] InventoryItemTypeDatas;
+    public QualityData[] QualityDatas;
 }
 
 [Serializable]
@@ -29,15 +29,16 @@ public class SpriteItemData
     public Sprite SpriteItem;
 }
 
-[Serializable]
-public class InventoryItemTypeData
-{
-    public InventoryItemType InventoryItemType;
-    public Color Color;
-}
 
 [Serializable]
 public enum InventoryItemType
 {
-    Legend = 3,Epic = 2,Rare = 1,Normal = 0
+    Pistol,Rifle,Shotgun,Microgun,MachineGun
+}
+
+[Serializable]
+public class QualityData
+{
+    public int Quality;
+    public Color Color;
 }

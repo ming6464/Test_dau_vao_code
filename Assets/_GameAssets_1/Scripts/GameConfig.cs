@@ -12,10 +12,12 @@ public class GameConfig : Singleton<GameConfig>
         return Array.Find(_dataGame.SpriteItemDatas,x => x.Name_sprite == sprite_name).SpriteItem;
     }
 
-    public Color GetColorTypeItem(InventoryItemType type)
+    public Color GetColorWithQuality(int quality)
     {
-        if (!_dataGame || _dataGame.InventoryItemTypeDatas == null) return new Color();
-        return Array.Find(_dataGame.InventoryItemTypeDatas, x => x.InventoryItemType == type).Color;
+        if (!_dataGame || _dataGame.QualityDatas.Length == 0) return new Color();
+        int indexFind = Array.FindIndex(_dataGame.QualityDatas, x => x.Quality == quality);
+        if(indexFind < 0) return new Color();
+        return _dataGame.QualityDatas[indexFind].Color;
     }
 
     public InventoryItemData GetRandomInventoryItemData()

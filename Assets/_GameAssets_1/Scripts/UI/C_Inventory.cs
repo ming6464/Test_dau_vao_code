@@ -38,7 +38,13 @@ public class C_Inventory : MonoBehaviour
 
     private void Start()
     {
-        if (GameConfig.Instance && _machineGunTab.ItemPrefab  && _machineGunTab.Content)
+        Init();
+        MachineGunTab_Button_on_click();
+    }
+
+    private void Init()
+    {
+        if (GameConfig.Instance && _itemMachineSpawnCount > 0 && _machineGunTab.ItemPrefab  && _machineGunTab.Content)
         {
             InventoryItemData[] itemDatas = new InventoryItemData[_itemMachineSpawnCount];
             for (int i = 0; i < _itemMachineSpawnCount; i++)
@@ -46,7 +52,7 @@ public class C_Inventory : MonoBehaviour
                 itemDatas[i] = GameConfig.Instance.GetRandomInventoryItemData();
             }
 
-            foreach (InventoryItemData itemData in itemDatas.OrderBy(x => (int)x.InventoryItemType))
+            foreach (InventoryItemData itemData in itemDatas.OrderBy(x => -x.Quality))
             {
                 GameObject itemNew = Instantiate(_machineGunTab.ItemPrefab, _machineGunTab.Content, false);
                 if (itemNew.TryGetComponent(out UIItemInventory uiItemInventory))
@@ -55,8 +61,6 @@ public class C_Inventory : MonoBehaviour
                 }
             }
         }
-
-        MachineGunTab_Button_on_click();
     }
 
     #endregion

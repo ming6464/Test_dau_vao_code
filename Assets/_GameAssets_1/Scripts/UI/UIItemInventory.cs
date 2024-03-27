@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,9 +10,10 @@ public class UIItemInventory : MonoBehaviour
     [SerializeField] private Image _inventoryItemImage;
     [SerializeField] private Button _button;
     private Color _bgColor;
-    private bool _isEquiped;
+    private bool _isEquipped;
     private Sprite _inventoryItemSprite;
     private bool _isInit;
+    private InventoryItemType _type;
 
     #endregion
 
@@ -21,12 +21,13 @@ public class UIItemInventory : MonoBehaviour
 
     public void Init(InventoryItemData data)
     {
-        if(_isInit || data == null) return;
+        if(_isInit) return;
         _isInit = true;
         if(GameConfig.Instance == null) return;
-        _bgColor = GameConfig.Instance.GetColorTypeItem(data.InventoryItemType);
-        _isEquiped = false;
+        _bgColor = GameConfig.Instance.GetColorWithQuality(data.Quality);
+        _isEquipped = false;
         _inventoryItemSprite = GameConfig.Instance.GetSpriteItem(data.Name_sprite);
+        _type = data.InventoryItemType;
         LoadUI();
         if (_button)
         {
@@ -73,7 +74,7 @@ public class UIItemInventory : MonoBehaviour
 
         if (_EquipedUIGObj)
         {
-            _EquipedUIGObj.SetActive(_isEquiped);
+            _EquipedUIGObj.SetActive(_isEquipped);
         }
 
         if (_inventoryItemImage)
@@ -86,11 +87,30 @@ public class UIItemInventory : MonoBehaviour
 
     private void Button_on_click()
     {
-        _isEquiped = !_isEquiped;
+        _isEquipped = !_isEquipped;
         if (_EquipedUIGObj)
         {
-            _EquipedUIGObj.SetActive(_isEquiped);
+            _EquipedUIGObj.SetActive(_isEquipped);
         }
+
+        PostEvent();
+    }
+
+    private void LoadRegisterEvent()
+    {
+        if (_isEquipped)
+        {
+            // this.RegisterListener();
+        }
+        else
+        {
+            
+        }
+    }
+
+    private void PostEvent()
+    {
+        this.PostEvent(_isEquipped ? EventID.EquippedWeapon : EventID.UnEquippedWeapon, _type);
     }
 
     #endregion

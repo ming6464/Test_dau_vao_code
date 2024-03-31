@@ -180,14 +180,15 @@ public static class EventDispatcherExtension
 public enum EventID
 {
     None = 0,
-    UpdateBulletCountBoss,
-    UpdateHPBoss,
-    PlayerFire,
     FinishGame,
     ReplayGame,
     UpdateHPPlayer,
     UpdatePoint,
-    EnemyDead
+    EnemyDead,
+    EquippedWeapon,
+    UnEquippedWeapon,
+    ClickWeaponEquippedUI,
+    OpenTabInventory
 }
 
 #endregion

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,48 +8,45 @@ public class UIItemInventory : MonoBehaviour
     [SerializeField] private Image _bgColorImage;
     [SerializeField] private GameObject _EquipedUIGObj;
     [SerializeField] private Image _inventoryItemImage;
-    [SerializeField] private Button _button;
     private Color _bgColor;
-    private bool _isEquiped;
     private Sprite _inventoryItemSprite;
     private bool _isInit;
+    private InventoryItemData _data;
+    private bool _isEquipped;
+    private int _id;
 
+    public int Quality => _data.Quality;
+    public InventoryItemType InventoryType => _data.InventoryItemType;
+    public bool IsEquipped => _isEquipped;
+    public int ID => _id;
+    
     #endregion
 
     #region UNITY CORE
 
     public void Init(InventoryItemData data)
     {
-        if(_isInit || data == null) return;
+        if(_isInit) return;
+        _data = data;
         _isInit = true;
         if(GameConfig.Instance == null) return;
-        _bgColor = GameConfig.Instance.GetColorTypeItem(data.InventoryItemType);
-        _isEquiped = false;
+        _bgColor = GameConfig.Instance.GetColorWithQuality(data.Quality);
         _inventoryItemSprite = GameConfig.Instance.GetSpriteItem(data.Name_sprite);
-        LoadUI();
-        if (_button)
+        _isEquipped = false;
+        _id = transform.GetInstanceID();
+        if (_bgColorImage)
         {
-            _button.onClick.AddListener(Button_on_click);
+            _bgColorImage.color = _bgColor;
         }
-    }
 
-    private void OnEnable()
-    {
-        if (_isInit)
+        if (_EquipedUIGObj)
         {
-            if (_button)
-            {
-                _button.onClick.RemoveAllListeners();
-                _button.onClick.AddListener(Button_on_click);
-            }
+            _EquipedUIGObj.SetActive(false);
         }
-    }
 
-    private void OnDisable()
-    {
-        if (_button)
+        if (_inventoryItemImage)
         {
-            _button.onClick.RemoveAllListeners();
+            _inventoryItemImage.sprite = _inventoryItemSprite;
         }
     }
 
@@ -63,36 +59,42 @@ public class UIItemInventory : MonoBehaviour
 
 
     #endregion
-
-    private void LoadUI()
-    {
-        if (_bgColorImage)
-        {
-            _bgColorImage.color = _bgColor;
-        }
-
-        if (_EquipedUIGObj)
-        {
-            _EquipedUIGObj.SetActive(_isEquiped);
-        }
-
-        if (_inventoryItemImage)
-        {
-            _inventoryItemImage.sprite = _inventoryItemSprite;
-        }
-    }
-
+    
     #region Event
 
-    private void Button_on_click()
+    public void HandleOnClick()
     {
-        _isEquiped = !_isEquiped;
+        if (!_isEquipped)
+        {
+            OnEquipped();
+            this.PostEvent(EventID.EquippedWeapon , new MessUIItemEquipped{ID = _id,Type = InventoryType,Name_sprite = _data.Name_sprite, Quality = _data.Quality});
+        }
+        else
+        {
+            OnUnEquipped();
+            this.PostEvent(EventID.UnEquippedWeapon , _data.InventoryItemType);
+        }
+    }
+    
+    public void OnEquipped()
+    {
+        _isEquipped = true;
         if (_EquipedUIGObj)
         {
-            _EquipedUIGObj.SetActive(_isEquiped);
+            _EquipedUIGObj.SetActive(true);
         }
     }
 
+    public void OnUnEquipped()
+    {
+        _isEquipped = false;
+        if (_EquipedUIGObj)
+        {
+            _EquipedUIGObj.SetActive(false);
+        }
+    }
+    
+    
     #endregion
     
     #endregion

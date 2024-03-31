@@ -20,35 +20,185 @@ MonoBehaviour:
     Quality: 0
     InventoryItemType: 0
   - Id: 1
+    Name: Pencil
+    Description: "B\xFAt ch\xEC"
+    Name_sprite: pencil
+    Quality: 1
+    InventoryItemType: 0
+  - Id: 2
+    Name: Pencil
+    Description: "B\xFAt ch\xEC"
+    Name_sprite: pencil
+    Quality: 2
+    InventoryItemType: 0
+  - Id: 3
+    Name: Pencil
+    Description: "B\xFAt ch\xEC"
+    Name_sprite: pencil
+    Quality: 3
+    InventoryItemType: 0
+  - Id: 4
     Name: Pistol
     Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
     Name_sprite: gun1
     Quality: 0
-    InventoryItemType: 1
-  - Id: 2
+    InventoryItemType: 0
+  - Id: 5
+    Name: Pistol
+    Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
+    Name_sprite: gun1
+    Quality: 1
+    InventoryItemType: 0
+  - Id: 6
+    Name: Pistol
+    Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
+    Name_sprite: gun1
+    Quality: 2
+    InventoryItemType: 0
+  - Id: 7
+    Name: Pistol
+    Description: "S\xFAng l\u1EE5c th\u01B0\u1EDDng"
+    Name_sprite: gun1
+    Quality: 3
+    InventoryItemType: 0
+  - Id: 8
     Name: MP5
     Description: "S\xFAng ti\u1EC3u li\xEAn"
     Name_sprite: gun2
     Quality: 0
     InventoryItemType: 3
-  - Id: 3
+  - Id: 9
+    Name: MP5
+    Description: "S\xFAng ti\u1EC3u li\xEAn"
+    Name_sprite: gun2
+    Quality: 1
+    InventoryItemType: 3
+  - Id: 10
     Name: Special Pistol
     Description: "S\xFAng l\u1EE5c \u0111\u1EB7c bi\u1EC7t"
     Name_sprite: gun3
-    Quality: 0
-    InventoryItemType: 0
-  - Id: 4
+    Quality: 1
+    InventoryItemType: 2
+  - Id: 11
+    Name: Special Pistol
+    Description: "S\xFAng l\u1EE5c \u0111\u1EB7c bi\u1EC7t"
+    Name_sprite: gun3
+    Quality: 3
+    InventoryItemType: 2
+  - Id: 12
     Name: AK47
     Description: "S\xFAng tr\u01B0\u1EDDng Ak47"
     Name_sprite: gun4
     Quality: 0
-    InventoryItemType: 2
-  - Id: 5
+    InventoryItemType: 1
+  - Id: 13
     Name: Gatting gun
     Description: "S\xFAng m\xE1y Gatting"
     Name_sprite: gun5
+    Quality: 2
+    InventoryItemType: 4
+  - Id: 14
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
     Quality: 0
-    InventoryItemType: 0
+    InventoryItemType: 4
+  - Id: 15
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
+    Quality: 1
+    InventoryItemType: 4
+  - Id: 16
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
+    Quality: 2
+    InventoryItemType: 4
+  - Id: 17
+    Name: MachineGun
+    Description: "S\xFAng m\xE1y machine"
+    Name_sprite: MachineGun
+    Quality: 2
+    InventoryItemType: 4
+  - Id: 18
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 0
+    InventoryItemType: 3
+  - Id: 19
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 1
+    InventoryItemType: 3
+  - Id: 20
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 2
+    InventoryItemType: 3
+  - Id: 21
+    Name: MicroMachine1
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine1
+    Quality: 3
+    InventoryItemType: 3
+  - Id: 22
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 0
+    InventoryItemType: 3
+  - Id: 23
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 1
+    InventoryItemType: 3
+  - Id: 24
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 2
+    InventoryItemType: 3
+  - Id: 25
+    Name: MicroMachine2
+    Description: "S\xFAng m\xE1y MicroMachine1"
+    Name_sprite: microMachine2
+    Quality: 1
+    InventoryItemType: 3
+  - Id: 9
+    Name: rifle1
+    Description: "S\xFAng m\xE1y rifle1"
+    Name_sprite: rifle1
+    Quality: 2
+    InventoryItemType: 1
+  - Id: 10
+    Name: rifle2
+    Description: "S\xFAng m\xE1y rifle2"
+    Name_sprite: rifle2
+    Quality: 1
+    InventoryItemType: 1
+  - Id: 11
+    Name: rifle3
+    Description: "S\xFAng m\xE1y rifle3"
+    Name_sprite: rifle3
+    Quality: 3
+    InventoryItemType: 1
+  - Id: 12
+    Name: shotgun1
+    Description: "S\xFAng m\xE1y shotgun1"
+    Name_sprite: shotgun1
+    Quality: 3
+    InventoryItemType: 2
+  - Id: 13
+    Name: shotgun2
+    Description: "S\xFAng m\xE1y shotgun2"
+    Name_sprite: shotgun2
+    Quality: 1
+    InventoryItemType: 2
   SpriteItemDatas:
   - Name_sprite: pencil
     SpriteItem: {fileID: 21300000, guid: 80c812b9590e79e499788e27a1e00b14, type: 3}
@@ -62,12 +212,28 @@ MonoBehaviour:
     SpriteItem: {fileID: 21300000, guid: 4667e590088e4fc45be1740a93153a04, type: 3}
   - Name_sprite: gun5
     SpriteItem: {fileID: 21300000, guid: 5b0623cbcec58bd44a0fb04fff3a0b42, type: 3}
-  InventoryItemTypeDatas:
-  - InventoryItemType: 0
-    Color: {r: 1, g: 0.6224198, b: 0.1830188, a: 1}
-  - InventoryItemType: 1
-    Color: {r: 0.72835714, g: 0.37169808, b: 1, a: 1}
-  - InventoryItemType: 2
-    Color: {r: 0.2396226, g: 0.5243368, b: 1, a: 1}
-  - InventoryItemType: 3
-    Color: {r: 0.44872326, g: 1, b: 0.40943396, a: 1}
+  - Name_sprite: MachineGun
+    SpriteItem: {fileID: 21300000, guid: 68b76e6686ce80945ab3d3c45a21ace4, type: 3}
+  - Name_sprite: microMachine1
+    SpriteItem: {fileID: 21300000, guid: 8abfc78e6d8eddf40a11d3e8f30b7f70, type: 3}
+  - Name_sprite: microMachine2
+    SpriteItem: {fileID: 21300000, guid: 38f0308f3a69798498e7300e0f3d383c, type: 3}
+  - Name_sprite: rifle1
+    SpriteItem: {fileID: 21300000, guid: ae75151629409a944ba129ec1f1bbef8, type: 3}
+  - Name_sprite: rifle2
+    SpriteItem: {fileID: 21300000, guid: e388c6355cc9fd94f995bf66a9fece59, type: 3}
+  - Name_sprite: rifle3
+    SpriteItem: {fileID: 21300000, guid: 6efd262b65dfe4f42aadeae39735cde5, type: 3}
+  - Name_sprite: shotgun1
+    SpriteItem: {fileID: 21300000, guid: 9ad05760c8d919c47ae9bbc05f97231e, type: 3}
+  - Name_sprite: shotgun2
+    SpriteItem: {fileID: 21300000, guid: 41c0ac51d7851d0428fe558fb2bc6f17, type: 3}
+  QualityDatas:
+  - Quality: 0
+    Color: {r: 0.6291841, g: 1, b: 0.57924527, a: 1}
+  - Quality: 1
+    Color: {r: 0.1641509, g: 0.5541389, b: 1, a: 1}
+  - Quality: 2
+    Color: {r: 1, g: 0.37169808, b: 0.9024594, a: 1}
+  - Quality: 3
+    Color: {r: 1, g: 0.59970355, b: 0.29622638, a: 1}

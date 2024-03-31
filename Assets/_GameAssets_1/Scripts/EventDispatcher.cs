@@ -90,6 +90,11 @@ public class EventDispatcher : MonoBehaviour
         }
     }
 
+    public void RegisterListener(Action<object> callback)
+    {
+        
+    }
+
     public void PostEvent(EventID eventID, object param = null)
     {
         if (!_listeners.ContainsKey(eventID))

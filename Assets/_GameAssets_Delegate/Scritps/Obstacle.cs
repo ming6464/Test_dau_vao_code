@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class Obstacle : MonoBehaviour
 {
+    public Transform ObjectTf;
     public TypePoly Type;
     public string Name;
+    public Vector3 Position;
     
     [Header("Rectangle")] 
-    public float X;
-    public float Y;
+    public float Width;
+    public float Height;
     
     [Header("Circle")]
     public float Radius;
@@ -17,20 +19,25 @@ public class Obstacle : MonoBehaviour
     private void OnValidate()
     {
         transform.name = transform.GetSiblingIndex().ToString();
-        switch (Type)
+        if (ObjectTf)
         {
-            case TypePoly.Circle:
-                transform.localScale = Vector3.one * (Radius * 2);
-                break;
-            case TypePoly.Rectangle:
-                transform.localScale = new Vector3(X * 2, transform.localScale.y, Y * 2);
-                break;
+            switch (Type)
+            {
+                case TypePoly.Circle:
+                    ObjectTf.localScale = Vector3.one * (Radius * 2);
+                    break;
+                case TypePoly.Rectangle:
+                    ObjectTf.localScale = new Vector3(Width, transform.localScale.y, Height);
+                    break;
+            }
         }
+       
         
     }
 
-    private void Start()
+    private void Awake()
     {
+        Position = transform.position;
         Name = transform.GetSiblingIndex().ToString();
         transform.name = Name;
     }

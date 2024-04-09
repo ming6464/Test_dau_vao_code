@@ -1,23 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
 
 public class MoveAvoidObstacle : MonoBehaviour
 {
-    [Serializable]
-    public struct ObstacleInfo
-    {
-        public Vector3 Position;
-        public float Radius;
-        public string Name;
-    }
 
     public int Weight;
     public float Radius;
     public float Speed = 5f;
-    public List<ObstacleInfo> ObstacleInfos;
+    public List<Obstacle> ObstacleInfos;
     
     
     public bool UseNavMeshAgent;
@@ -27,34 +21,34 @@ public class MoveAvoidObstacle : MonoBehaviour
     public Color MyColorRay;
     public Color MyColorArrow;
     public Vector3 Destination;
+    
+    [Space(10)]
     public bool Run;
-    public ObstacleInfo ObsAim;
+    public Obstacle ObsAim;
+    public List<Obstacle> ObstacleInfosCollider;
 
-    public List<ObstacleInfo> ObstacleInfosCollider;
+    [Space(10)] public TypePoly[] ObstacletypeUse;
+    
     private bool _isSetAim;
     private Transform _myTransform;
 
     private void Awake()
     {
-        ObstacleInfosCollider = new List<ObstacleInfo>();
+        ObstacleInfosCollider = new List<Obstacle>();
         _myTransform = transform;
     }
 
     private void OnValidate()
     {
-        ObstacleInfos = new List<ObstacleInfo>();
+        ObstacleInfos = FindObjectsOfType<Obstacle>().ToList().FindAll(x => Array.Exists(ObstacletypeUse, y => y == x.Type));
         transform.localScale = Vector3.one * (Radius * 2);
-        foreach (Obstacle obs in FindObjectsOfType<Obstacle>())
-        {
-            ObstacleInfos.Add(new ObstacleInfo{Position = obs.transform.position,Radius = obs.Radius,Name = obs.Name});
-        }
-
         NavMeshAgent = GetComponent<NavMeshAgent>();
     }
     
 
     private void Update()
     {
+        DrawWeight();
         if (Input.GetMouseButtonDown(0))
         {
             Run = true;
@@ -86,7 +80,39 @@ public class MoveAvoidObstacle : MonoBehaviour
         }
     }
 
-    
+    private void DrawWeight()
+    {
+        if(Weight <= 0) return;
+        Vector3 point1;
+        Vector3 point2;
+        Vector3 point3;
+        Vector3 point4;
+        foreach (Obstacle obs in ObstacleInfos)
+        {
+            switch (obs.Type)
+            {
+                case TypePoly.Circle:
+                    break;
+                case TypePoly.Rectangle:
+                    float X = obs.Width / 2f;
+                    float Y = obs.Height / 2f;
+                    Transform obsTf = obs.transform;
+                    point1 = obsTf.TransformPoint(new Vector3(-X - Weight, 0, -Y - Weight));
+                    point2 = obsTf.TransformPoint(new Vector3(-X - Weight, 0, Y + Weight));
+                    point3 = obsTf.TransformPoint(new Vector3(X + Weight, 0, Y + Weight));
+                    point4 = obsTf.TransformPoint(new Vector3(X + Weight ,0, -Y - Weight));
+                    
+                    Debug.DrawLine(point1,point2,Color.green);
+                    Debug.DrawLine(point2,point3,Color.green);
+                    Debug.DrawLine(point3,point4,Color.green);
+                    Debug.DrawLine(point4,point1,Color.green);
+                    
+                    break;
+            }
+        }
+    }
+
+
     private Vector3 GetSafeDirection(Vector3 newPosition)
     {
         int countDequy = 3;
@@ -95,45 +121,96 @@ public class MoveAvoidObstacle : MonoBehaviour
             countDequy--;
             bool isSetAim = false;
             Vector3 nextPos = GetNextPosition(safeDirection);
+            float d;
             foreach (var obstacle in ObstacleInfos)
             {
-                if (Vector3.Distance(obstacle.Position,nextPos) < Radius + obstacle.Radius)
+                switch (obstacle.Type)
                 {
-                    if (!_isSetAim)
-                    {
-                        ObsAim = obstacle;
-                    }
-                    else if(ObsAim.Position != obstacle.Position)
-                    {
-                        Vector3 nextPosToObsAim = ObsAim.Position - GetCurrentPosition();
-                        Vector3 nextPosToNewObs = obstacle.Position - GetCurrentPosition();
-                        float angle = Angle180Clockwise(nextPosToObsAim, nextPosToNewObs);
-                        if (angle < 0)
+                    case TypePoly.Circle:
+                        if (Vector3.Distance(obstacle.Position,nextPos) < Radius + obstacle.Radius)
                         {
-                            AddListCollider(ObsAim);
-                            ObsAim = obstacle;
+                            if (!_isSetAim)
+                            {
+                                ObsAim = obstacle;
+                            }
+                            else if(ObsAim.Position != obstacle.Position)
+                            {
+                                Vector3 nextPosToObsAim = ObsAim.Position - GetCurrentPosition();
+                                Vector3 nextPosToNewObs = obstacle.Position - GetCurrentPosition();
+                                float angle = Angle180Clockwise(nextPosToObsAim, nextPosToNewObs);
+                                if (angle < 0)
+                                {
+                                    AddListCollider(ObsAim);
+                                    ObsAim = obstacle;
+                                }
+                            }
+                            isSetAim = true;
+                            _isSetAim = true;
                         }
-                    }
+                        break;
+                    case TypePoly.Rectangle:
+                        d = GetDistanceToRectangle(obstacle.transform, obstacle.Width, obstacle.Height, nextPos);
+                        if (d < (Radius + Weight))
+                        {
+                            if (!_isSetAim)
+                            {
+                                ObsAim = obstacle;
+                            }
+                            else if(ObsAim.Position != obstacle.Position)
+                            {
+                                Vector3 nextPosToObsAim = ObsAim.Position - GetCurrentPosition();
+                                Vector3 nextPosToNewObs = obstacle.Position - GetCurrentPosition();
+                                float angle = Angle180Clockwise(nextPosToObsAim, nextPosToNewObs);
+                                if (angle < 0)
+                                {
+                                    AddListCollider(ObsAim);
+                                    ObsAim = obstacle;
+                                }
+                            }
                     
-                    isSetAim = true;
-                    _isSetAim = true;
+                            isSetAim = true;
+                            _isSetAim = true;
+                        }
+                        break;
                 }
+                
             }
-
             RemoveListCollider(ObsAim);
-        
             if (isSetAim)
             {
-                Vector3 pointCollider = GetPoint(new ObstacleInfo { Position = nextPos, Radius = Radius }, ObsAim,true);
-                pointCollider.y = ObsAim.Position.y;
-                Vector3 obsToPoint = (pointCollider - ObsAim.Position);
+                switch (ObsAim.Type)
+                {
+                    case TypePoly.Circle:
+                        Vector3 pointCollider = GetPoint(new Obstacle { Position = nextPos, Radius = Radius }, ObsAim,true);
+                        pointCollider.y = ObsAim.Position.y;
+                        Vector3 obsToPoint = (pointCollider - ObsAim.Position);
+                        float add = ObsAim.Radius * Weight * 1.0f / Radius;
+                        if (add < Weight) add = Weight;
+                        nextPos = ObsAim.Position + obsToPoint.normalized * (Radius + ObsAim.Radius + add);
+                        safeDirection = nextPos - GetCurrentPosition();
+                        break;
+                    case TypePoly.Rectangle:
+                        d = GetDistanceToRectangle(ObsAim.transform, ObsAim.Width, ObsAim.Height, nextPos,out Vector3 point);
+                        float AngleThrust = Mathf.Clamp(1 -((d - Radius)/Weight), 0f, 1f) * 90;
+                        Vector3 curPosToPoint = point - GetCurrentPosition();
+                        int dir = Angle180Clockwise(curPosToPoint, safeDirection) > 0 ? -1 : 1;
+                        
+                        Vector3 vtDir = Quaternion.Euler(0,AngleThrust * dir,0) * curPosToPoint;
+                        
+                        DrawRay(GetCurrentPosition(),vtDir.normalized,Color.yellow,arrow:true);
+                        
+                        if (Angle180Clockwise(safeDirection, vtDir) * dir < 0)
+                        {
+                            safeDirection = vtDir;
+                        }
+                        
+                        // safeDirection = Quaternion.Euler(0, AngleThrust, 0) * safeDirection;
+                        // safeDirection.Normalize();
+                        // safeDirection += (Quaternion.Euler(0,AngleThrust,0) * (point - GetCurrentPosition()).normalized);
+                        return safeDirection;
+                        break;
+                }
 
-                float add = ObsAim.Radius * Weight * 1.0f / Radius;
-                if (add < Weight) add = Weight;
-                
-                nextPos = ObsAim.Position + obsToPoint.normalized * (Radius + ObsAim.Radius + add);
-
-                safeDirection = nextPos - GetCurrentPosition();
                 if (countDequy < 0)
                 {
                     return safeDirection;
@@ -144,7 +221,7 @@ public class MoveAvoidObstacle : MonoBehaviour
             if (_isSetAim)
             {
                 bool isCutCircle = false;
-                foreach(ObstacleInfo obs in ObstacleInfosCollider)
+                foreach(Obstacle obs in ObstacleInfosCollider.FindAll(x => x.Type == TypePoly.Circle))
                 {
                     if (IsLineIntersectCircle(obs.Position, obs.Radius + Radius, nextPos,
                             Destination))
@@ -165,7 +242,7 @@ public class MoveAvoidObstacle : MonoBehaviour
                 if (isCutCircle)
                 {
                     nextPos = (GetCurrentPosition() - ObsAim.Position).normalized * ObsAim.Radius + ObsAim.Position;
-                    Vector3 pointCollider = GetPoint(new ObstacleInfo { Position = nextPos, Radius = Radius }, ObsAim,true);
+                    Vector3 pointCollider = GetPoint(new Obstacle { Position = nextPos, Radius = Radius }, ObsAim,true);
                     pointCollider.y = ObsAim.Position.y;
                     Vector3 obsToPoint = (pointCollider - ObsAim.Position);
                     
@@ -184,34 +261,35 @@ public class MoveAvoidObstacle : MonoBehaviour
             return safeDirection;
         }
         
-        Vector3 GetPoint(ObstacleInfo Circle1,ObstacleInfo Circle2,bool GetHigher)
-        {
-            Vector3 centerA = Circle1.Position;
-            Vector3 centerB = Circle2.Position;
-            float radiusA = Circle1.Radius;
-            float radiusB = Circle2.Radius;
-            if (Vector3.Distance(centerA, centerB) < (radiusB + radiusA))
-            {
-                Vector3 pointC, pointD;
-                CalculateCircleIntersection(centerA, radiusA, centerB, radiusB, out pointC, out pointD);
-                
-                Vector3 AToB = centerB - centerA;
-                Vector3 AToC = pointC - centerA;
-                bool C_Higher = Angle180Clockwise(AToB, AToC) < 0;
-                if (C_Higher == GetHigher)
-                {
-                    return pointC;
-                }
-
-                return pointD;
-            }
-
-            return Vector3.zero;
-        }
+        
         return Test(newPosition - transform.position).normalized;
     }
     
     #region SUPPORT
+    
+    private Vector3 GetPoint(Obstacle Circle1,Obstacle Circle2,bool GetHigher)
+    {
+        Vector3 centerA = Circle1.Position;
+        Vector3 centerB = Circle2.Position;
+        float radiusA = Circle1.Radius;
+        float radiusB = Circle2.Radius;
+        if (Vector3.Distance(centerA, centerB) < (radiusB + radiusA))
+        {
+            Vector3 pointC, pointD;
+            CalculateCircleIntersection(centerA, radiusA, centerB, radiusB, out pointC, out pointD);
+            Vector3 AToB = centerB - centerA;
+            Vector3 AToC = pointC - centerA;
+            bool C_Higher = Angle180Clockwise(AToB, AToC) < 0;
+            if (C_Higher == GetHigher)
+            {
+                return pointC;
+            }
+
+            return pointD;
+        }
+
+        return Vector3.zero;
+    }
     
     private bool IsLineIntersectCircle(Vector3 O, float R, Vector3 A, Vector3 B)
     {
@@ -231,7 +309,7 @@ public class MoveAvoidObstacle : MonoBehaviour
         return false;
     }
 
-    private void AddListCollider(ObstacleInfo obs)
+    private void AddListCollider(Obstacle obs)
     {
         if(String.IsNullOrEmpty(obs.Name)) return;
         int index = ObstacleInfosCollider.FindIndex(x => x.Name == obs.Name);
@@ -241,9 +319,9 @@ public class MoveAvoidObstacle : MonoBehaviour
         }
     }
 
-    private void RemoveListCollider(ObstacleInfo obs)
+    private void RemoveListCollider(Obstacle obs)
     {
-        if(String.IsNullOrEmpty(obs.Name)) return;
+        if(!obs || String.IsNullOrEmpty(obs.Name)) return;
         int index = ObstacleInfosCollider.FindIndex(x => x.Name == obs.Name);
         if (index >= 0)
         {
@@ -270,13 +348,22 @@ public class MoveAvoidObstacle : MonoBehaviour
     }
     
     
-    private float GetDistanceToRectangle(Transform rectangle, float width, float height, Transform point,out Vector3 pointForce)
+    private float GetDistanceToRectangle(Transform rectangle, float width, float height, Vector3 point,out Vector3 pointForce)
     {
         float x = width / 2.0f;
         float y = height / 2.0f;
-        Vector3 pointInvertToLocalRectangle = rectangle.InverseTransformPoint(point.position);
+        Vector3 pointInvertToLocalRectangle = rectangle.InverseTransformPoint(point);
         pointForce = rectangle.TransformPoint(new Vector3(Mathf.Clamp(pointInvertToLocalRectangle.x, -x, x), 0, Mathf.Clamp(pointInvertToLocalRectangle.z, -y, y)));
         //----------------
+        Vector3 absPoint = new Vector3(Mathf.Abs(pointInvertToLocalRectangle.x), Mathf.Abs(pointInvertToLocalRectangle.y), Mathf.Abs(pointInvertToLocalRectangle.z));
+        return Mathf.Sqrt(Mathf.Pow(Mathf.Max(absPoint.x - x,0), 2) + Mathf.Pow(Mathf.Max(absPoint.z - y,0), 2));
+    }
+    
+    private float GetDistanceToRectangle(Transform rectangle, float width, float height, Vector3 point)
+    {
+        float x = width / 2.0f;
+        float y = height / 2.0f;
+        Vector3 pointInvertToLocalRectangle = rectangle.InverseTransformPoint(point);
         Vector3 absPoint = new Vector3(Mathf.Abs(pointInvertToLocalRectangle.x), Mathf.Abs(pointInvertToLocalRectangle.y), Mathf.Abs(pointInvertToLocalRectangle.z));
         return Mathf.Sqrt(Mathf.Pow(Mathf.Max(absPoint.x - x,0), 2) + Mathf.Pow(Mathf.Max(absPoint.z - y,0), 2));
     }
@@ -340,8 +427,8 @@ public class MoveAvoidObstacle : MonoBehaviour
             Vector3 dir1 = (Quaternion.Euler(0,45,0) * -direct).normalized * .5f;
             Vector3 dir2 = (Quaternion.Euler(0,-45,0) * -direct).normalized * .5f;
             Vector3 startPos2 = startPos + direct;
-            DrawRay(startPos2,dir1,MyColorArrow);
-            DrawRay(startPos2,dir2,MyColorArrow);
+            DrawRay(startPos2,dir1,color);
+            DrawRay(startPos2,dir2,color);
         }
     }
 
@@ -362,8 +449,8 @@ public class MoveAvoidObstacle : MonoBehaviour
             Vector3 dir1 = (Quaternion.Euler(0,45,0) * -direct).normalized * .5f;
             Vector3 dir2 = (Quaternion.Euler(0,-45,0) * -direct).normalized * .5f;
             Vector3 startPos2 = startPos + direct;
-            DrawRay(startPos2,dir1,MyColorArrow);
-            DrawRay(startPos2,dir2,MyColorArrow);
+            DrawRay(startPos2,dir1,color);
+            DrawRay(startPos2,dir2,color);
         }
     }
 

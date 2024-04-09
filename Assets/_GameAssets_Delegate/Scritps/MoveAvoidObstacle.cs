@@ -19,7 +19,6 @@ public class MoveAvoidObstacle : MonoBehaviour
     
     [Header("Color")]
     public Color MyColorRay;
-    public Color MyColorArrow;
     public Vector3 Destination;
     
     [Space(10)]
@@ -28,9 +27,13 @@ public class MoveAvoidObstacle : MonoBehaviour
     public List<Obstacle> ObstacleInfosCollider;
 
     [Space(10)] public TypePoly[] ObstacletypeUse;
-    
+
+    [Space(10)] public int CheckFrame;
     private bool _isSetAim;
     private Transform _myTransform;
+    private int _checkFrame;
+    private Vector3 _passVt;
+    private Obstacle _passObs;
 
     private void Awake()
     {
@@ -112,7 +115,9 @@ public class MoveAvoidObstacle : MonoBehaviour
         }
     }
 
-
+    private bool isOverrideDir = false;
+    private int overrideDir = 1;
+    private Vector3 positionPass;
     private Vector3 GetSafeDirection(Vector3 newPosition)
     {
         int countDequy = 3;
@@ -122,6 +127,19 @@ public class MoveAvoidObstacle : MonoBehaviour
             bool isSetAim = false;
             Vector3 nextPos = GetNextPosition(safeDirection);
             float d;
+
+
+            // if (_isSetAim)
+            // {
+            //     d = GetDistanceToRectangle(ObsAim.transform, ObsAim.Width, ObsAim.Height, nextPos);
+            //     if (d < (Radius + Weight))
+            //     {
+            //         _isSetAim = false;
+            //     }
+            // }
+            
+            
+            
             foreach (var obstacle in ObstacleInfos)
             {
                 switch (obstacle.Type)
@@ -194,23 +212,62 @@ public class MoveAvoidObstacle : MonoBehaviour
                         float AngleThrust = Mathf.Clamp(1 -((d - Radius)/Weight), 0f, 1f) * 90;
                         Vector3 curPosToPoint = point - GetCurrentPosition();
                         int dir = Angle180Clockwise(curPosToPoint, safeDirection) > 0 ? -1 : 1;
+
+                        if (isOverrideDir)
+                        {
+                            dir = overrideDir;
+                        }
                         
                         Vector3 vtDir = Quaternion.Euler(0,AngleThrust * dir,0) * curPosToPoint;
                         
-                        DrawRay(GetCurrentPosition(),vtDir.normalized,Color.yellow,arrow:true);
+                        DrawRay(GetCurrentPosition(),vtDir.normalized * 2f,Color.yellow,arrow:true);
                         
-                        if (Angle180Clockwise(safeDirection, vtDir) * dir < 0)
+                        if (Mathf.Abs(Angle180Clockwise(-curPosToPoint, vtDir)) < Mathf.Abs(Angle180Clockwise(-curPosToPoint,safeDirection)))
                         {
                             safeDirection = vtDir;
                         }
-                        
-                        // safeDirection = Quaternion.Euler(0, AngleThrust, 0) * safeDirection;
-                        // safeDirection.Normalize();
-                        // safeDirection += (Quaternion.Euler(0,AngleThrust,0) * (point - GetCurrentPosition()).normalized);
-                        return safeDirection;
+
+                        // bool check = false;
+                        //
+                        // if (AngleThrust == 90)
+                        // {
+                        //     if (_passVt == Vector3.zero)
+                        //     {
+                        //         _checkFrame = CheckFrame;
+                        //         _passObs = ObsAim;
+                        //         isOverrideDir = false;
+                        //         check = true;
+                        //     }else if (ObsAim == _passObs)
+                        //     {
+                        //         check = true;
+                        //         float angle = Mathf.Abs(Angle180Clockwise(_passVt.normalized, vtDir.normalized));
+                        //         if(_checkFrame > 0 && (180f - angle) <= 30f)
+                        //         {
+                        //             _checkFrame--;
+                        //             if (_checkFrame == 0)
+                        //             {
+                        //                 _passVt = Vector3.zero;
+                        //                 isOverrideDir = true;
+                        //                 overrideDir = dir;
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                        //
+                        // if(!check)
+                        // {
+                        //     isOverrideDir = false;
+                        //     _passVt = Vector3.zero;
+                        // }
+                        // else
+                        // {
+                        //     _passVt = vtDir.normalized;
+                        // }
                         break;
                 }
-
+                
+                return safeDirection;
+                
                 if (countDequy < 0)
                 {
                     return safeDirection;

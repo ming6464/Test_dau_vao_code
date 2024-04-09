@@ -15,7 +15,6 @@ public class MoveAvoidObstacle : MonoBehaviour
     }
 
     public int Weight;
-    public int FrameReset;
     public float Radius;
     public float Speed = 5f;
     public List<ObstacleInfo> ObstacleInfos;
@@ -74,7 +73,7 @@ public class MoveAvoidObstacle : MonoBehaviour
         if (Run)
         {
             DrawLine(transform.position,Destination,MyColorRay,true);
-            Vector3 safeDirection = GetSafeDirection1(GetNextPosition());
+            Vector3 safeDirection = GetSafeDirection(GetNextPosition());
             DrawRay(transform.position,safeDirection,Color.green,1,true);
             if (UseNavMeshAgent)
             {
@@ -88,7 +87,7 @@ public class MoveAvoidObstacle : MonoBehaviour
     }
 
     
-    private Vector3 GetSafeDirection1(Vector3 newPosition)
+    private Vector3 GetSafeDirection(Vector3 newPosition)
     {
         int countDequy = 3;
         Vector3 Test(Vector3 safeDirection)
@@ -269,6 +268,19 @@ public class MoveAvoidObstacle : MonoBehaviour
         intersection2 = new Vector3(p2.x - h * (center2.z - center1.z) / distance,0, p2.z + h * (center2.x - center1.x) / distance);
         return true;
     }
+    
+    
+    private float GetDistanceToRectangle(Transform rectangle, float width, float height, Transform point,out Vector3 pointForce)
+    {
+        float x = width / 2.0f;
+        float y = height / 2.0f;
+        Vector3 pointInvertToLocalRectangle = rectangle.InverseTransformPoint(point.position);
+        pointForce = rectangle.TransformPoint(new Vector3(Mathf.Clamp(pointInvertToLocalRectangle.x, -x, x), 0, Mathf.Clamp(pointInvertToLocalRectangle.z, -y, y)));
+        //----------------
+        Vector3 absPoint = new Vector3(Mathf.Abs(pointInvertToLocalRectangle.x), Mathf.Abs(pointInvertToLocalRectangle.y), Mathf.Abs(pointInvertToLocalRectangle.z));
+        return Mathf.Sqrt(Mathf.Pow(Mathf.Max(absPoint.x - x,0), 2) + Mathf.Pow(Mathf.Max(absPoint.z - y,0), 2));
+    }
+    
     private float Angle360AxisXClockwise(Vector3 dir)
     {
         float angle = Vector2.SignedAngle(Vector2.right, new Vector2(dir.x, dir.z));

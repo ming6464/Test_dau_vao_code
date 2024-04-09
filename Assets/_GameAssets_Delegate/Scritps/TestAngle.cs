@@ -3,60 +3,30 @@ using UnityEngine;
 
 public class TestAngle : MonoBehaviour
 {
-    public float radiusA;   // Bán kính của hình tròn A
-    public float radiusB;   // Bán kính của hình tròn B
-    public Obstacle Circle1;
-    public Obstacle Circle2;
-    public Color color1;
-    public Color color2;
 
-    public Obstacle Circle;
-    public Transform target1;
-    public Transform target2;
-    public int Point;
+    public Transform target;
+    public Obstacle circle1;
+    public Obstacle circle2;
+
+    [Space(10)] 
+    public bool IsColliderCircle2;
+    public bool IsCircle1ColliderCircle2;
+
+    public float Angle_circle1circle2_circle1target;
     
-    void Update()
+    private void Update()
     {
-        Vector3 centerA = Circle1.transform.position;
-        Vector3 centerB = Circle2.transform.position;
-        radiusA = Circle1.Radius;
-        radiusB = Circle2.Radius;
-        if (Vector3.Distance(centerA, centerB) < (radiusA + radiusB))
-        {
-        
-            Vector3 pointC = Vector3.zero;
-            Vector3 pointD = Vector3.zero;
-            CalculateCircleIntersection(centerA, radiusA, centerB, radiusB, out pointC, out pointD);
-            Debug.DrawLine(pointC,centerB,Color.blue);
-            Debug.DrawLine(pointD,centerB,Color.blue);
-            Debug.DrawLine(pointC,pointD,Color.blue);
-            Debug.DrawLine(centerA,centerB,Color.blue);
-            
-            Vector3 AToB = Circle2.transform.position - Circle1.transform.position;
-            Vector3 AToC = pointC - Circle1.transform.position;
-            Vector3 AToD = pointD - Circle1.transform.position;
-        
-            if (Angle180AxisXClockwise(AToB, AToD) > 0)
-            {
-                Debug.DrawLine(centerA,pointC,color2);
-                Debug.DrawLine(centerA,pointD,color1);
-            }
-            else
-            {
-                Debug.DrawLine(centerA, pointC, color1);
-                Debug.DrawLine(centerA,pointD,color2);
-            }
-           
-        }
+        Debug.DrawLine(circle1.transform.position,target.position,Color.blue);
+        Debug.DrawLine(circle1.transform.position,circle2.transform.position,Color.blue);
 
-        Vector2 point1 = new Vector2(target1.position.x,target1.position.z);
-        Vector2 point2 = new Vector2(target2.position.x,target2.position.z);
-        Vector2 point3 = new Vector2(Circle.transform.position.x,Circle.transform.position.z);
-        
-        Debug.DrawLine(target1.position,target2.position, Color.magenta);
-        
-        Debug.Log($"Đường thẳng {IsLineIntersectCircle(Circle.transform.position,Circle.Radius,target2.position,target1.position)} Cắt");
-        
+        Vector3 circle1Circle2 = circle2.transform.position - circle1.transform.position;
+        Vector3 circle1Target = target.position - circle1.transform.position;
+
+        Angle_circle1circle2_circle1target = Angle180AxisXClockwise(circle1Circle2, circle1Target);
+        IsColliderCircle2 = IsLineIntersectCircle(circle2.transform.position, circle2.Radius,
+            circle1.transform.position, target.position); 
+        IsCircle1ColliderCircle2 = IsLineIntersectCircle(circle2.transform.position, circle2.Radius + circle1.Radius,
+            circle1.transform.position, target.position);
     }
 
     private bool IsLineIntersectCircle(Vector3 O, float R, Vector3 A, Vector3 B)

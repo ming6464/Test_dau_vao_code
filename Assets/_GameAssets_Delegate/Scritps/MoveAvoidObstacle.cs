@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using Random = UnityEngine.Random;
+
 
 public class MoveAvoidObstacle : MonoBehaviour
 {
@@ -23,7 +23,6 @@ public class MoveAvoidObstacle : MonoBehaviour
     
     public bool UseNavMeshAgent;
     public NavMeshAgent NavMeshAgent;
-    public bool CanMove;
     
     [Header("Color")]
     public Color MyColorRay;
@@ -31,16 +30,15 @@ public class MoveAvoidObstacle : MonoBehaviour
     public Vector3 Destination;
     public bool Run;
     public ObstacleInfo ObsAim;
-    
+
+    public List<ObstacleInfo> ObstacleInfosCollider;
     private bool _isSetAim;
-    private bool _canMove;
     private Transform _myTransform;
-    private int _frameReset;
 
     private void Awake()
     {
+        ObstacleInfosCollider = new List<ObstacleInfo>();
         _myTransform = transform;
-        _frameReset = FrameReset;
     }
 
     private void OnValidate()
@@ -67,7 +65,6 @@ public class MoveAvoidObstacle : MonoBehaviour
                 Destination = hit.point;
                 Destination.y = 0;
             }
-
             _isSetAim = false;
         }else if (Input.GetMouseButtonDown(1))
         {
@@ -76,30 +73,16 @@ public class MoveAvoidObstacle : MonoBehaviour
 
         if (Run)
         {
-            _canMove = CanMove;
             DrawLine(transform.position,Destination,MyColorRay,true);
             Vector3 safeDirection = GetSafeDirection1(GetNextPosition());
             DrawRay(transform.position,safeDirection,Color.green,1,true);
-            if (_canMove)
+            if (UseNavMeshAgent)
             {
-                if (UseNavMeshAgent)
-                {
-                    NavMeshAgent.Move(safeDirection * (Speed * Time.deltaTime));
-                }
-                else
-                {
-                    transform.position += safeDirection * (Speed * Time.deltaTime);
-                }
-
+                NavMeshAgent.Move(safeDirection * (Speed * Time.deltaTime));
             }
-        }
-
-        if (_frameReset > 0)
-        {
-            _frameReset--;
-            if (_frameReset == 0)
+            else
             {
-                _isSetAim = false;
+                transform.position += safeDirection * (Speed * Time.deltaTime);
             }
         }
     }
@@ -128,15 +111,17 @@ public class MoveAvoidObstacle : MonoBehaviour
                         float angle = Angle180Clockwise(nextPosToObsAim, nextPosToNewObs);
                         if (angle < 0)
                         {
+                            AddListCollider(ObsAim);
                             ObsAim = obstacle;
                         }
                     }
                     
-                    _frameReset = FrameReset;
                     isSetAim = true;
                     _isSetAim = true;
                 }
             }
+
+            RemoveListCollider(ObsAim);
         
             if (isSetAim)
             {
@@ -159,11 +144,27 @@ public class MoveAvoidObstacle : MonoBehaviour
 
             if (_isSetAim)
             {
-               bool isCutCircle = IsLineIntersectCircle(ObsAim.Position, ObsAim.Radius + Radius, GetCurrentPosition(),
-                    Destination);
+                bool isCutCircle = false;
+                foreach(ObstacleInfo obs in ObstacleInfosCollider)
+                {
+                    if (IsLineIntersectCircle(obs.Position, obs.Radius + Radius, nextPos,
+                            Destination))
+                    {
+                        isCutCircle = true;
+                        break;
+                    }
+                }
+
+                if (!isCutCircle)
+                {
+                    if (Mathf.Abs(Angle180Clockwise(ObsAim.Position - nextPos, Destination - nextPos)) < 90)
+                    {
+                        isCutCircle = true;
+                    }
+                }
+                
                 if (isCutCircle)
                 {
-                    _frameReset = FrameReset;
                     nextPos = (GetCurrentPosition() - ObsAim.Position).normalized * ObsAim.Radius + ObsAim.Position;
                     Vector3 pointCollider = GetPoint(new ObstacleInfo { Position = nextPos, Radius = Radius }, ObsAim,true);
                     pointCollider.y = ObsAim.Position.y;
@@ -178,6 +179,7 @@ public class MoveAvoidObstacle : MonoBehaviour
                     return safeDirection;
                 }
                 _isSetAim = false;
+                ObstacleInfosCollider.Clear();
             }
             
             return safeDirection;
@@ -229,6 +231,26 @@ public class MoveAvoidObstacle : MonoBehaviour
 
         return false;
     }
+
+    private void AddListCollider(ObstacleInfo obs)
+    {
+        if(String.IsNullOrEmpty(obs.Name)) return;
+        int index = ObstacleInfosCollider.FindIndex(x => x.Name == obs.Name);
+        if (index < 0)
+        {
+            ObstacleInfosCollider.Add(obs);
+        }
+    }
+
+    private void RemoveListCollider(ObstacleInfo obs)
+    {
+        if(String.IsNullOrEmpty(obs.Name)) return;
+        int index = ObstacleInfosCollider.FindIndex(x => x.Name == obs.Name);
+        if (index >= 0)
+        {
+            ObstacleInfosCollider.RemoveAt(index);
+        }
+    }
     
     private bool CalculateCircleIntersection(Vector3 center1, float radius1, Vector3 center2, float radius2, out Vector3 intersection1, out Vector3 intersection2)
     {
@@ -269,8 +291,7 @@ public class MoveAvoidObstacle : MonoBehaviour
     
     private float Angle180Clockwise(Vector3 start,Vector3 dir)
     {
-        float angle = Vector2.SignedAngle(new Vector2(start.x, start.z), new Vector2(dir.x, dir.z));
-        return angle;
+        return Vector2.SignedAngle(new Vector2(start.x, start.z), new Vector2(dir.x, dir.z));
     }
     
 
@@ -286,7 +307,7 @@ public class MoveAvoidObstacle : MonoBehaviour
 
     private Vector3 GetNextPosition(Vector3 direct)
     {
-        return direct.normalized * (Speed * Time.deltaTime) + GetCurrentPosition();
+          return direct.normalized * (Speed * Time.deltaTime) + GetCurrentPosition();
     }
 
     private Vector3 GetCurrentPosition()
@@ -334,5 +355,6 @@ public class MoveAvoidObstacle : MonoBehaviour
         }
     }
 
+    
     #endregion
 }

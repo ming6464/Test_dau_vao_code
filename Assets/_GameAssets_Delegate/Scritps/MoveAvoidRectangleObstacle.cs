@@ -604,6 +604,202 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
         return Test(newPosition - transform.position).normalized;
     }
+    private Vector3 GetSafeDirection4(Vector3 newPosition)
+    {
+        Vector3 Test(Vector3 safeDirection)
+        {
+            bool isSetAim = false;
+            Vector3 nextPos = GetNextPosition(safeDirection);
+            float d;
+            float distanceObsAim = 0;
+            ObstacleInfosCollider.Clear();
+            foreach (var obstacle in ObstacleInfos)
+            {
+                d = GetDistanceToRectangle(obstacle.transform, obstacle.Width, obstacle.Height, nextPos,
+                    out Vector3 pointForce);
+                if (d < (Radius + Weight))
+                {
+                    float AngleThrust = Mathf.Clamp(1 - ((d - Radius) / Weight), 0f, 1f) * 90;
+                    RectangleObstacleInfo obsInfo = new RectangleObstacleInfo
+                        { Obstacle = obstacle, PointForce = pointForce, Distance = d, AngleThrust = AngleThrust };
+                    
+                    DrawLine(pointForce,pointForce + Vector3.up * 10f,Color.black);
+                    if (ObstacleInfosCollider.Count == 0)
+                    {
+                        // distanceObsAim = Vector3.Distance(pointForce, Destination);
+                        ObsAim = obsInfo;
+                    }
+                    else
+                    {
+                        // d = Vector3.Distance(pointForce, Destination);
+                        // if (d < distanceObsAim)
+                        // {
+                        //     distanceObsAim = d;
+                        //     ObsAim = obsInfo;
+                        // }
+
+                        Vector3 posToObsAim = ObsAim.PointForce - nextPos;
+                        Vector3 posToObsSet = obsInfo.PointForce - nextPos;
+                        if (Angle180Clockwise(posToObsAim,posToObsSet) * _directChoose < 0)
+                        {
+                            ObsAim = obsInfo;
+                        }
+                    }
+
+                    AddListCollider(obsInfo);
+                    isSetAim = true;
+                    _isSetAim = true;
+                }
+            }
+
+            if (isSetAim)
+            {
+                DrawLine(ObsAim.Obstacle.Position ,ObsAim.Obstacle.Position + Vector3.up * 10,Color.red);
+                DrawRay(GetCurrentPosition(),(ObsAim.Obstacle.Position - GetCurrentPosition()).normalized,Color.red,10f);
+                RemoveListCollider(ObsAim);
+                Vector3 curPosToPoint = ObsAim.PointForce - GetCurrentPosition();
+                Vector3 curPosToRectangle = ObsAim.Obstacle.Position - GetCurrentPosition();
+                Vector3 curPosToDestination = Destination - GetCurrentPosition();
+                int dir = Angle180Clockwise(curPosToRectangle, curPosToDestination) < 0 ? 1 : -1;
+
+                if (dir == DirrectionOverride)
+                {
+                    IsOverrideDirection = false;
+                    _checkFrame = 0;
+                }
+
+                Vector3 vtDir;
+                
+                if (IsOverrideDirection)
+                {
+                    
+                    dir = DirrectionOverride;
+                }
+                vtDir = Quaternion.Euler(0, ObsAim.AngleThrust * dir, 0) * curPosToPoint;
+                if (IsOverrideDirection || Mathf.Abs(Angle180Clockwise(-curPosToPoint, vtDir)) <
+                    Mathf.Abs(Angle180Clockwise(-curPosToPoint, safeDirection)))
+                {
+                    safeDirection = vtDir;
+                }
+                DrawRay(GetCurrentPosition(), vtDir.normalized * 2f, Color.red, arrow: true);
+                
+                
+                foreach (RectangleObstacleInfo info in ObstacleInfosCollider)
+                {
+                    DrawRay(GetCurrentPosition(),(info.Obstacle.Position - GetCurrentPosition()).normalized,Color.black,10f);
+                    if (_checkFrame > 0)
+                    {
+                        _checkFrame--;
+                        break;
+                    }
+                    if (Vector3.Distance(info.PointForce, ObsAim.PointForce) < 2f * Radius)
+                    {
+                        IsOverrideDirection = true;
+                        safeDirection = Quaternion.Euler(0, 180, 0) * safeDirection;
+                        DirrectionOverride = -dir;
+                        dir = DirrectionOverride;
+                        _checkFrame = CheckFrame;
+                    }
+                    else if(info.AngleThrust >= 85f)
+                    {
+                        curPosToRectangle = info.Obstacle.Position - GetCurrentPosition();
+                        int dir1 = Angle180Clockwise(curPosToRectangle, curPosToDestination) < 0 ? 1 : -1;
+                        if (IsOverrideDirection)
+                        {
+                            dir1 = -dir1;
+                            if (DirrectionOverride != dir)
+                            {
+                                vtDir = Quaternion.Euler(0, 180, 0) * vtDir;
+                            }
+                        }
+
+                        Vector3 curPosToPoint2 = info.PointForce - GetCurrentPosition();
+                        Vector3 vtRecommend = Quaternion.Euler(0, info.AngleThrust * dir1, 0) * curPosToPoint2;
+                        DrawRay(GetCurrentPosition(), vtRecommend.normalized, Color.black, arrow: true);
+                        safeDirection = vtRecommend + vtDir;
+
+                        // curPosToPoint2 = info.PointForce - GetCurrentPosition();
+                        //
+                        // if (Mathf.Abs(Angle180Clockwise(-curPosToPoint2, safeDirection)) > 90)
+                        // {
+                        //     dir1 = Angle180Clockwise(curPosToRectangle, curPosToDestination) < 0 ? 1 : -1;
+                        //     // if (IsOverrideDirection)
+                        //     // {
+                        //     //     dir1 = DirrectionOverride;
+                        //     // }
+                        //     Vector3 vtRecommend = Quaternion.Euler(0, 90 * dir1, 0) * curPosToPoint2;
+                        //     if (ObsAim.AngleThrust < 80)
+                        //     {
+                        //         Vector3 vt1 = Quaternion.Euler(0, 90 * dir, 0) * curPosToPoint;
+                        //         safeDirection = vt1 + vtRecommend;
+                        //     }
+                        //     else
+                        //     {
+                        //     
+                        //     }
+                        //     curPosToRectangle = info.Obstacle.Position - GetCurrentPosition();
+                        //     DrawRay(GetCurrentPosition(), vtRecommend.normalized * 2f, Color.black, arrow: true);
+                        //     if (Mathf.Abs(Angle180Clockwise(-curPosToPoint.normalized, vtRecommend.normalized)) > 90)
+                        //     {
+                        //     
+                        //         IsOverrideDirection = true;
+                        //         DirrectionOverride = -dir;
+                        //     }
+                        //     else
+                        //     {
+                        //         safeDirection = vtRecommend;
+                        //     }
+                        // }
+                    }
+                }
+            }
+            else
+            {
+                _isSetAim = false;
+            }
+
+            // bool check = false;
+            //
+            // if (AngleThrust == 90)
+            // {
+            //     if (_passVt == Vector3.zero)
+            //     {
+            //         _checkFrame = CheckFrame;
+            //         _passObs = ObsAim;
+            //         isOverrideDir = false;
+            //         check = true;
+            //     }else if (ObsAim == _passObs)
+            //     {
+            //         check = true;
+            //         float angle = Mathf.Abs(Angle180Clockwise(_passVt.normalized, vtDir.normalized));
+            //         if(_checkFrame > 0 && (180f - angle) <= 30f)
+            //         {
+            //             _checkFrame--;
+            //             if (_checkFrame == 0)
+            //             {
+            //                 _passVt = Vector3.zero;
+            //                 isOverrideDir = true;
+            //                 overrideDir = dir;
+            //             }
+            //         }
+            //     }
+            // }
+            //
+            // if(!check)
+            // {
+            //     isOverrideDir = false;
+            //     _passVt = Vector3.zero;
+            // }
+            // else
+            // {
+            //     _passVt = vtDir.normalized;
+            // }
+
+            return safeDirection;
+        }
+
+        return Test(newPosition - transform.position).normalized;
+    }
 
     #region SUPPORT
 

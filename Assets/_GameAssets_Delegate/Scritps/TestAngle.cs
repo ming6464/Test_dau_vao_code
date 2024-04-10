@@ -1,4 +1,5 @@
 ﻿using System;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class TestAngle : MonoBehaviour
@@ -79,6 +80,25 @@ public class TestAngle : MonoBehaviour
         intersection1 = new Vector3(p2.x + h * (center2.z - center1.z) / distance,0, p2.z - h * (center2.x - center1.x) / distance);
         intersection2 = new Vector3(p2.x - h * (center2.z - center1.z) / distance,0, p2.z + h * (center2.x - center1.x) / distance);
         return true;
+    }
+    
+    float Angle180Clockwise1(float3 start, float3 dir)
+    {
+        float2 vectorA = new float2(start.x, start.z);
+        float2 vectorB = new float2(dir.x, dir.z);
+
+        // Sử dụng math.atan2 để tính góc giữa hai vector
+        float angle = math.degrees(math.atan2(vectorB.y, vectorB.x) - math.atan2(vectorA.y, vectorA.x));
+
+        // Xác định dấu của góc dựa trên hướng của hai vector
+        float cross = vectorA.x * vectorB.y - vectorA.y * vectorB.x;
+        float sign = math.sign(cross);
+
+        // Ánh xạ góc vào phạm vi từ -180 đến 180 độ
+        angle = math.fmod(angle + 180, 360) - 180;
+
+        // Kết quả cuối cùng
+        return angle * sign;
     }
 
 }

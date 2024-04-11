@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class MoveAvoidRectangleObstacle : MonoBehaviour
@@ -28,8 +29,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
     private int _checkFrame;
     private Vector3 _passVt;
     private Obstacle _passObs;
-    [Header("Test Choose")]
-    public float _directChoose;
+    [Header("Test Choose")] public float _directChoose;
 
     private void Awake()
     {
@@ -192,8 +192,6 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                         dir = Angle180Clockwise(curPosToPoint, safeDirection) > 0 ? -1 : 1;
                         safeDirection = Quaternion.Euler(0, 90 * dir, 0) * curPosToPoint;
                     }
-                    
-                    
                 }
             }
             else
@@ -245,14 +243,12 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
     }
 
 
-    [Header("Test Dirrect Override")] 
-    public bool IsOverrideDirection;
+    [Header("Test Dirrect Override")] public bool IsOverrideDirection;
 
     public int DirrectionOverride;
-    
+
     private Vector3 GetSafeDirection2(Vector3 newPosition)
     {
-
         Vector3 Test(Vector3 safeDirection)
         {
             bool isSetAim = false;
@@ -269,8 +265,8 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                     float AngleThrust = Mathf.Clamp(1 - ((d - Radius) / Weight), 0f, 1f) * 90;
                     RectangleObstacleInfo obsInfo = new RectangleObstacleInfo
                         { Obstacle = obstacle, PointForce = pointForce, Distance = d, AngleThrust = AngleThrust };
-                    
-                    DrawLine(pointForce,pointForce + Vector3.up * 10f,Color.black);
+
+                    DrawLine(pointForce, pointForce + Vector3.up * 10f, Color.black);
                     if (ObstacleInfosCollider.Count == 0)
                     {
                         // distanceObsAim = Vector3.Distance(pointForce, Destination);
@@ -287,7 +283,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
                         Vector3 posToObsAim = ObsAim.PointForce - nextPos;
                         Vector3 posToObsSet = obsInfo.PointForce - nextPos;
-                        if (Angle180Clockwise(posToObsAim,posToObsSet) * _directChoose < 0)
+                        if (Angle180Clockwise(posToObsAim, posToObsSet) * _directChoose < 0)
                         {
                             ObsAim = obsInfo;
                         }
@@ -301,8 +297,9 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
             if (isSetAim)
             {
-                DrawLine(ObsAim.Obstacle.Position ,ObsAim.Obstacle.Position + Vector3.up * 10,Color.red);
-                DrawRay(GetCurrentPosition(),(ObsAim.Obstacle.Position - GetCurrentPosition()).normalized,Color.red,10f);
+                DrawLine(ObsAim.Obstacle.Position, ObsAim.Obstacle.Position + Vector3.up * 10, Color.red);
+                DrawRay(GetCurrentPosition(), (ObsAim.Obstacle.Position - GetCurrentPosition()).normalized, Color.red,
+                    10f);
                 RemoveListCollider(ObsAim);
                 Vector3 curPosToPoint = ObsAim.PointForce - GetCurrentPosition();
                 Vector3 curPosToRectangle = ObsAim.Obstacle.Position - GetCurrentPosition();
@@ -316,24 +313,27 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                 }
 
                 Vector3 vtDir;
-                
+
                 if (IsOverrideDirection)
                 {
                     dir = DirrectionOverride;
                 }
+
                 vtDir = Quaternion.Euler(0, ObsAim.AngleThrust * dir, 0) * curPosToPoint;
                 if (Mathf.Abs(Angle180Clockwise(-curPosToPoint, vtDir)) <
                     Mathf.Abs(Angle180Clockwise(-curPosToPoint, safeDirection)))
                 {
                     safeDirection = vtDir;
                 }
+
                 DrawRay(GetCurrentPosition(), vtDir.normalized * 2f, Color.red, arrow: true);
-                
+
                 Vector3 curPosToPoint2 = Vector3.zero;
                 int dir1 = 1;
                 foreach (RectangleObstacleInfo info in ObstacleInfosCollider)
                 {
-                    DrawRay(GetCurrentPosition(),(info.Obstacle.Position - GetCurrentPosition()).normalized,Color.black,10f);
+                    DrawRay(GetCurrentPosition(), (info.Obstacle.Position - GetCurrentPosition()).normalized,
+                        Color.black, 10f);
                     if (info.AngleThrust < 90) continue;
                     curPosToPoint2 = info.PointForce - GetCurrentPosition();
 
@@ -345,11 +345,11 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                         {
                             dir1 = DirrectionOverride;
                         }
+
                         Vector3 vtRecommend = Quaternion.Euler(0, 90 * dir1, 0) * curPosToPoint2;
                         DrawRay(GetCurrentPosition(), vtRecommend.normalized * 2f, Color.black, arrow: true);
                         if (Mathf.Abs(Angle180Clockwise(-curPosToPoint.normalized, vtRecommend.normalized)) > 90)
                         {
-                            
                             IsOverrideDirection = true;
                             DirrectionOverride = -dir;
                         }
@@ -407,7 +407,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
         return Test(newPosition - transform.position).normalized;
     }
-    
+
     private Vector3 GetSafeDirection3(Vector3 newPosition)
     {
         Vector3 Test(Vector3 safeDirection)
@@ -426,8 +426,8 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                     float AngleThrust = Mathf.Clamp(1 - ((d - Radius) / Weight), 0f, 1f) * 90;
                     RectangleObstacleInfo obsInfo = new RectangleObstacleInfo
                         { Obstacle = obstacle, PointForce = pointForce, Distance = d, AngleThrust = AngleThrust };
-                    
-                    DrawLine(pointForce,pointForce + Vector3.up * 10f,Color.black);
+
+                    DrawLine(pointForce, pointForce + Vector3.up * 10f, Color.black);
                     if (ObstacleInfosCollider.Count == 0)
                     {
                         // distanceObsAim = Vector3.Distance(pointForce, Destination);
@@ -444,7 +444,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
                         Vector3 posToObsAim = ObsAim.PointForce - nextPos;
                         Vector3 posToObsSet = obsInfo.PointForce - nextPos;
-                        if (Angle180Clockwise(posToObsAim,posToObsSet) * _directChoose < 0)
+                        if (Angle180Clockwise(posToObsAim, posToObsSet) * _directChoose < 0)
                         {
                             ObsAim = obsInfo;
                         }
@@ -458,8 +458,9 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
             if (isSetAim)
             {
-                DrawLine(ObsAim.Obstacle.Position ,ObsAim.Obstacle.Position + Vector3.up * 10,Color.red);
-                DrawRay(GetCurrentPosition(),(ObsAim.Obstacle.Position - GetCurrentPosition()).normalized,Color.red,10f);
+                DrawLine(ObsAim.Obstacle.Position, ObsAim.Obstacle.Position + Vector3.up * 10, Color.red);
+                DrawRay(GetCurrentPosition(), (ObsAim.Obstacle.Position - GetCurrentPosition()).normalized, Color.red,
+                    10f);
                 RemoveListCollider(ObsAim);
                 Vector3 curPosToPoint = ObsAim.PointForce - GetCurrentPosition();
                 Vector3 curPosToRectangle = ObsAim.Obstacle.Position - GetCurrentPosition();
@@ -473,29 +474,32 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                 }
 
                 Vector3 vtDir;
-                
+
                 if (IsOverrideDirection)
                 {
-                    
                     dir = DirrectionOverride;
                 }
+
                 vtDir = Quaternion.Euler(0, ObsAim.AngleThrust * dir, 0) * curPosToPoint;
                 if (IsOverrideDirection || Mathf.Abs(Angle180Clockwise(-curPosToPoint, vtDir)) <
                     Mathf.Abs(Angle180Clockwise(-curPosToPoint, safeDirection)))
                 {
                     safeDirection = vtDir;
                 }
+
                 DrawRay(GetCurrentPosition(), vtDir.normalized * 2f, Color.red, arrow: true);
-                
-                
+
+
                 foreach (RectangleObstacleInfo info in ObstacleInfosCollider)
                 {
-                    DrawRay(GetCurrentPosition(),(info.Obstacle.Position - GetCurrentPosition()).normalized,Color.black,10f);
+                    DrawRay(GetCurrentPosition(), (info.Obstacle.Position - GetCurrentPosition()).normalized,
+                        Color.black, 10f);
                     if (_checkFrame > 0)
                     {
                         _checkFrame--;
                         break;
                     }
+
                     if (Vector3.Distance(info.PointForce, ObsAim.PointForce) < 2f * Radius)
                     {
                         IsOverrideDirection = true;
@@ -504,7 +508,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                         dir = DirrectionOverride;
                         _checkFrame = CheckFrame;
                     }
-                    else if(info.AngleThrust >= 85f)
+                    else if (info.AngleThrust >= 85f)
                     {
                         curPosToRectangle = info.Obstacle.Position - GetCurrentPosition();
                         int dir1 = Angle180Clockwise(curPosToRectangle, curPosToDestination) < 0 ? 1 : -1;
@@ -604,6 +608,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
         return Test(newPosition - transform.position).normalized;
     }
+
     private Vector3 GetSafeDirection4(Vector3 newPosition)
     {
         Vector3 Test(Vector3 safeDirection)
@@ -622,8 +627,8 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                     float AngleThrust = Mathf.Clamp(1 - ((d - Radius) / Weight), 0f, 1f) * 90;
                     RectangleObstacleInfo obsInfo = new RectangleObstacleInfo
                         { Obstacle = obstacle, PointForce = pointForce, Distance = d, AngleThrust = AngleThrust };
-                    
-                    DrawLine(pointForce,pointForce + Vector3.up * 10f,Color.black);
+
+                    DrawLine(pointForce, pointForce + Vector3.up * 10f, Color.black);
                     if (ObstacleInfosCollider.Count == 0)
                     {
                         // distanceObsAim = Vector3.Distance(pointForce, Destination);
@@ -640,7 +645,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
                         Vector3 posToObsAim = ObsAim.PointForce - nextPos;
                         Vector3 posToObsSet = obsInfo.PointForce - nextPos;
-                        if (Angle180Clockwise(posToObsAim,posToObsSet) * _directChoose < 0)
+                        if (Angle180Clockwise(posToObsAim, posToObsSet) * _directChoose < 0)
                         {
                             ObsAim = obsInfo;
                         }
@@ -654,8 +659,9 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
 
             if (isSetAim)
             {
-                DrawLine(ObsAim.Obstacle.Position ,ObsAim.Obstacle.Position + Vector3.up * 10,Color.red);
-                DrawRay(GetCurrentPosition(),(ObsAim.Obstacle.Position - GetCurrentPosition()).normalized,Color.red,10f);
+                DrawLine(ObsAim.Obstacle.Position, ObsAim.Obstacle.Position + Vector3.up * 10, Color.red);
+                DrawRay(GetCurrentPosition(), (ObsAim.Obstacle.Position - GetCurrentPosition()).normalized, Color.red,
+                    10f);
                 RemoveListCollider(ObsAim);
                 Vector3 curPosToPoint = ObsAim.PointForce - GetCurrentPosition();
                 Vector3 curPosToRectangle = ObsAim.Obstacle.Position - GetCurrentPosition();
@@ -669,29 +675,32 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                 }
 
                 Vector3 vtDir;
-                
+
                 if (IsOverrideDirection)
                 {
-                    
                     dir = DirrectionOverride;
                 }
+
                 vtDir = Quaternion.Euler(0, ObsAim.AngleThrust * dir, 0) * curPosToPoint;
                 if (IsOverrideDirection || Mathf.Abs(Angle180Clockwise(-curPosToPoint, vtDir)) <
                     Mathf.Abs(Angle180Clockwise(-curPosToPoint, safeDirection)))
                 {
                     safeDirection = vtDir;
                 }
+
                 DrawRay(GetCurrentPosition(), vtDir.normalized * 2f, Color.red, arrow: true);
-                
-                
+
+
                 foreach (RectangleObstacleInfo info in ObstacleInfosCollider)
                 {
-                    DrawRay(GetCurrentPosition(),(info.Obstacle.Position - GetCurrentPosition()).normalized,Color.black,10f);
+                    DrawRay(GetCurrentPosition(), (info.Obstacle.Position - GetCurrentPosition()).normalized,
+                        Color.black, 10f);
                     if (_checkFrame > 0)
                     {
                         _checkFrame--;
                         break;
                     }
+
                     if (Vector3.Distance(info.PointForce, ObsAim.PointForce) < 2f * Radius)
                     {
                         IsOverrideDirection = true;
@@ -700,7 +709,7 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
                         dir = DirrectionOverride;
                         _checkFrame = CheckFrame;
                     }
-                    else if(info.AngleThrust >= 85f)
+                    else if (info.AngleThrust >= 85f)
                     {
                         curPosToRectangle = info.Obstacle.Position - GetCurrentPosition();
                         int dir1 = Angle180Clockwise(curPosToRectangle, curPosToDestination) < 0 ? 1 : -1;
@@ -996,6 +1005,19 @@ public class MoveAvoidRectangleObstacle : MonoBehaviour
             DrawRay(startPos2, dir1, color);
             DrawRay(startPos2, dir2, color);
         }
+    }
+
+    private void Quaterniona()
+    {
+        // var a = quaternion.LookRotation();
+        // var b = Quaternion.LookRotation()
+        //math.lerp()
+        // transform.TransformPoint();
+        // transform.InverseTransformPoint()
+
+        // Vector3.Normalize();
+        // float3 a = new float3(1, 2, 3);
+        // math.normalize(a);
     }
 
     #endregion

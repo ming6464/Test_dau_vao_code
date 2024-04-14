@@ -92,7 +92,6 @@ public class EventDispatcher : MonoBehaviour
 
     public void RegisterListener(Action<object> callback)
     {
-        
     }
 
     public void PostEvent(EventID eventID, object param = null)
@@ -147,7 +146,6 @@ public class EventDispatcher : MonoBehaviour
         ClearAllListener();
     }
 #endif
-    
 }
 
 
@@ -193,7 +191,9 @@ public enum EventID
     EquippedWeapon,
     UnEquippedWeapon,
     ClickWeaponEquippedUI,
-    OpenTabInventory
+    OpenTabInventory,
+    RightClick,
+    LeftClick,
 }
 
 #endregion

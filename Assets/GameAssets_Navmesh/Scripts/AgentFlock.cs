@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AI;
@@ -20,7 +22,7 @@ public class AgentFlock : MonoBehaviour
     public float RemainingDistance;
 
     private FlockManager _flockManager;
-    private NativeList<float3> Paths;
+    private List<float3> Paths;
     private bool CalculatePath;
     private int _frameCountDownDelta;
     [SerializeField] private int _index;
@@ -32,7 +34,7 @@ public class AgentFlock : MonoBehaviour
             TryGetComponent(out NavAgent);
         }
 
-        Paths = new NativeList<float3>(Allocator.Persistent);
+        Paths = new List<float3>();
         _frameCountDownDelta = -1;
         CalculatePath = false;
         Index = -1;
@@ -60,14 +62,6 @@ public class AgentFlock : MonoBehaviour
     private void OnDisable()
     {
         _flockManager.RemoveAgent(Index, GetInstanceID());
-        try
-        {
-            Paths.Dispose();
-        }
-        catch
-        {
-            //ignore
-        }
     }
 
     private void Start()
@@ -86,20 +80,20 @@ public class AgentFlock : MonoBehaviour
 
     private void Update()
     {
-        if (Paths.Length > 0)
-        {
-            for (int i = 0; i < Paths.Length - 1; i++)
-            {
-                if (i == 0)
-                {
-                    Debug.DrawLine(transform.position, Paths[i], Color.blue);
-                }
-                else
-                {
-                    Debug.DrawLine(Paths[i + 1], Paths[i], Color.blue);
-                }
-            }
-        }
+        // if (Paths.Count > 0)
+        // {
+        //     for (int i = 0; i < Paths.Count - 1; i++)
+        //     {
+        //         if (i == 0)
+        //         {
+        //             Debug.DrawLine(transform.position, Paths[i], Color.blue);
+        //         }
+        //         else
+        //         {
+        //             Debug.DrawLine(Paths[i + 1], Paths[i], Color.blue);
+        //         }
+        //     }
+        // }
 
         if (!NavAgent.isStopped && NavAgent.path.corners.Length > 1)
         {
@@ -129,7 +123,6 @@ public class AgentFlock : MonoBehaviour
             NavAgent.isStopped = true;
         }
 
-        CalculatePath = false;
         NavAgent.SetDestination(destination);
 
         while (NavAgent.pathPending)
@@ -137,9 +130,6 @@ public class AgentFlock : MonoBehaviour
             await Task.Yield();
         }
 
-        Debug.Log($"CalculatePath : {Index}");
-
-        CalculatePath = true;
         _frameCountDownDelta = FrameCountDownSet;
         if (NavAgent.isOnNavMesh)
         {
@@ -158,24 +148,24 @@ public class AgentFlock : MonoBehaviour
 
         NavAgent.Move(velocity);
 
-        if (Paths.Length > 0)
-        {
-            Vector3 vt = Paths[0];
-            transform.rotation = Quaternion.LookRotation(vt - transform.position);
-            if (math.length((float3)transform.position - Paths[0]) <= ReachDistance)
-            {
-                Paths.RemoveAt(0);
-            }
-
-            if (Paths.Length > 0 && _frameCountDownDelta > 0)
-            {
-                _frameCountDownDelta--;
-                if (_frameCountDownDelta == 0)
-                {
-                    // NavAgent.SetDestination(Paths[0]);
-                    _frameCountDownDelta = FrameCountDownSet;
-                }
-            }
-        }
+        // if (Paths.Count > 0)
+        // {
+        //     Vector3 vt = Paths[0];
+        //     transform.rotation = Quaternion.LookRotation(vt - transform.position);
+        //     if (math.length((float3)transform.position - Paths[0]) <= ReachDistance)
+        //     {
+        //         Paths.RemoveAt(0);
+        //     }
+        //
+        //     if (Paths.Count > 0 && _frameCountDownDelta > 0)
+        //     {
+        //         _frameCountDownDelta--;
+        //         if (_frameCountDownDelta == 0)
+        //         {
+        //             // NavAgent.SetDestination(Paths[0]);
+        //             _frameCountDownDelta = FrameCountDownSet;
+        //         }
+        //     }
+        // }
     }
 }

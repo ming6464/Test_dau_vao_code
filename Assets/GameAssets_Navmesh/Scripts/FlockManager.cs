@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Collections;
+using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 public class FlockManager : MonoBehaviour
@@ -13,22 +12,30 @@ public class FlockManager : MonoBehaviour
     public static FlockManager Instance => _ins;
     private static FlockManager _ins;
 
-    public int indexCheckVar;
-    [SerializeField] private int _countMax;
-    [SerializeField] private int _batchSize;
-    [SerializeField] private float _avoidDistance;
-    [SerializeField] private float _reachDistance;
-    [SerializeField] private float _speed;
+    [Tooltip("Số lượng tối đa các bot mà flock có thể quản lí"), Range(10, 5000), SerializeField]
+    private int _population = 250;
 
-    [Range(1, 5)] [SerializeField] private int _teamCapacity;
+    [Tooltip("Tốc độ né"), Range(1, 5f), SerializeField]
+    private float _speed = 3;
+
+    [Tooltip("Khoảng giữa 2 bot"), Range(0, 5f), SerializeField]
+    private float _avoidDistance = .5f;
+
+    [Range(1, 10), SerializeField] private int _teamCapacity = 5;
+    
+    [SerializeField] private float _distanceStartCheck;
+    [SerializeField] private float _fieldOfView;
+    [SerializeField] private float _radiusCheckFieldOfView;
+    
+    private int _batchSize = 64;
 
     //"LIST"
     private AgentFlock[] _agentFlocks;
-    public NativeArray<float3x2> _agentPositionData;
+    private NativeArray<float3x2> _agentPositionData;
     private JobHandle _jobHandle;
-    public NativeArray<float3> _velocityData;
+    private NativeArray<float3> _velocityData;
     private NativeList<int> _indexAdd;
-    public int IndexMax;
+    public int _indexMax;
 
     #endregion
 
@@ -44,33 +51,37 @@ public class FlockManager : MonoBehaviour
         Init();
     }
 
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Vector3 pos1 = ((Quaternion.Euler(0, _fieldOfView / 2, 0) * transform.forward) * _fieldOfView) + transform.position;
+        Vector3 pos2 = ((Quaternion.Euler(0, -_fieldOfView / 2, 0) * transform.forward) * _fieldOfView) + transform.position;
+        Gizmos.DrawLine(transform.position,pos1);
+        Gizmos.DrawLine(transform.position,pos2);
+    }
+
     private void Init()
     {
-        _agentFlocks = new AgentFlock[_countMax];
-        _agentPositionData = new NativeArray<float3x2>(_countMax, Allocator.Persistent);
-        _velocityData = new NativeArray<float3>(_countMax, Allocator.Persistent);
+        _agentFlocks = new AgentFlock[_population];
+        _agentPositionData = new NativeArray<float3x2>(_population, Allocator.Persistent);
+        _velocityData = new NativeArray<float3>(_population, Allocator.Persistent);
         _indexAdd = new NativeList<int>(Allocator.Persistent);
     }
 
+
     private void Update()
     {
+        if (_indexMax <= 0) return;
+        _indexMax = math.min(_indexMax, _population - 1);
         _jobHandle.Complete();
         ApplyVelocity();
         UpdateDataList();
         ScheduleAgent();
     }
 
+
     private void OnDisable()
     {
-        try
-        {
-            // _agentPaths.Dispose();
-        }
-        catch
-        {
-            //ignore
-        }
-
         try
         {
             _agentPositionData.Dispose();
@@ -88,6 +99,15 @@ public class FlockManager : MonoBehaviour
         {
             //ignore
         }
+
+        try
+        {
+            _indexAdd.Dispose();
+        }
+        catch
+        {
+            //ignore
+        }
     }
 
     #endregion
@@ -96,28 +116,28 @@ public class FlockManager : MonoBehaviour
 
     private void ApplyVelocity()
     {
-        for (int i = 0; i < IndexMax; i++)
+        bool check;
+        for (int i = 0; i <= _indexMax; i++)
         {
-            if (_agentFlocks[i] && !_indexAdd.Contains(i) && !_velocityData[i].Equals(default))
-            {
-                _agentFlocks[i].Move(_velocityData[i]);
-            }
+            if (!_agentFlocks[i]) continue;
+            check = !_indexAdd.Contains(i) && _agentPositionData[i].c1.z == 0;
+            if (!check) continue;
+            _agentFlocks[i].OnAvoidNeighbors(_velocityData[i]);
         }
 
         _indexAdd.Clear();
     }
 
-
     private void UpdateDataList()
     {
-        int[] listSort = new int[IndexMax];
+        int[] listSort = new int[_indexMax + 1];
 
-        for (int i = 0; i < IndexMax; i++)
+        for (int i = 0; i <= _indexMax; i++)
         {
             listSort[i] = i;
         }
 
-        for (int i = 0; i < IndexMax; i++)
+        for (int i = 0; i <= _indexMax; i++)
         {
             int indexI = listSort[i];
             if (!_agentFlocks[indexI])
@@ -125,7 +145,7 @@ public class FlockManager : MonoBehaviour
                 continue;
             }
 
-            for (int j = i + 1; j < IndexMax; j++)
+            for (int j = i + 1; j <= _indexMax; j++)
             {
                 int indexJ = listSort[j];
                 if (!_agentFlocks[indexJ]) continue;
@@ -156,31 +176,35 @@ public class FlockManager : MonoBehaviour
 
             int team = teamNumber;
 
-            if (_agentFlocks[i].RemainingDistance == 999)
+            if (_agentPositionData[i].c1.z - 1 == 0)
+            {
+                team = 0;
+                teamNumber--;
+            }
+            else if (Math.Abs(_agentFlocks[i].RemainingDistance - 999) < 0.01f)
             {
                 team = 999;
             }
 
-            _agentFlocks[i].Index = i;
-            _agentFlocks[i].SetTeam(team);
-            _agentPositionData[i] = new float3x2(_agentFlocks[i].transform.position, new float3(team, 0, 0));
-            Debug.Log(
-                $"Index : {i} | position : {_agentFlocks[i].transform.position} | name {_agentFlocks[i].transform.name}");
+            _agentFlocks[i].index = i;
+            _agentPositionData[i] = new float3x2(_agentFlocks[i].transform.position,
+                new float3(team, _agentFlocks[i].Radius, 0));
         }
     }
 
-
     private void ScheduleAgent()
     {
-        FlockJob job = new FlockJob();
-        job.AgentPositionData = _agentPositionData;
-        job.AvoidDistance = _avoidDistance;
-        job.VelocityData = _velocityData;
-        job.Speed = _speed;
-        job.IndexMax = IndexMax;
-        job.TimeDelta = Time.deltaTime;
-        job.indexCheckVar = indexCheckVar;
-        _jobHandle = job.Schedule(_countMax, _batchSize);
+        FlockJob job = new FlockJob
+        {
+            AvoidDistance = _avoidDistance,
+            Speed = _speed,
+            AgentPositionData = _agentPositionData,
+            VelocityData = _velocityData,
+            IndexMax = _indexMax,
+            TimeDelta = Time.deltaTime
+        };
+
+        _jobHandle = job.Schedule(_population, _batchSize);
     }
 
     #endregion
@@ -189,39 +213,78 @@ public class FlockManager : MonoBehaviour
 
     public void AddAgent(AgentFlock agent, int passIndex, int ID)
     {
-        RemoveAgent(passIndex, ID);
-        for (int i = 0; i < _agentFlocks.Length; i++)
+        try
         {
-            if (_agentFlocks[i]) continue;
-            if (i > IndexMax)
+            RemoveAgent(passIndex, ID);
+            for (int i = 0; i < _agentFlocks.Length; i++)
             {
-                IndexMax = i;
-            }
+                if (_agentFlocks[i]) continue;
+                if (i > _indexMax)
+                {
+                    _indexMax = i;
+                }
 
-            _indexAdd.Add(i);
-            agent.Index = i;
-            agent.ReachDistance = _reachDistance;
-            _agentFlocks[i] = agent;
-            return;
+                _indexAdd.Add(i);
+                agent.index = i;
+                _agentFlocks[i] = agent;
+                return;
+            }
+        }
+        catch
+        {
+            //ignore
         }
     }
 
     public void RemoveAgent(int index, int ID)
     {
         if (index < 0) return;
-        if (_agentFlocks[index] && _agentFlocks[index].transform.GetInstanceID() == ID)
+
+        try
         {
-            if (index >= IndexMax)
+            if (_agentFlocks[index] && _agentFlocks[index].transform.GetInstanceID() == ID)
             {
-                IndexMax = index - 1;
+                if (index >= _indexMax)
+                {
+                    _indexMax = index - 1;
+                    _indexMax = math.max(_indexMax, 0);
+                }
+
+                _agentFlocks[index] = null;
+                for (int i = 0; i < _indexAdd.Length; i++)
+                {
+                    if (_indexAdd[i] == index)
+                    {
+                        _indexAdd[i] = -1;
+                        return;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            //ignore
+        }
+    }
+
+    public void EditPriority(bool isDefault, int index, int ID)
+    {
+        try
+        {
+            if (_agentFlocks[index].ID != ID) return;
+
+            if (_agentPositionData[index].Equals(default))
+            {
+                _agentPositionData[index] = new float3x2(float3.zero, float3.zero);
             }
 
-            _agentFlocks[index] = null;
-            int indexOf = _indexAdd.IndexOf(index);
-            if (indexOf >= 0)
-            {
-                _indexAdd.RemoveAtSwapBack(index);
-            }
+            float3x2 agentPosData = _agentPositionData[index];
+            agentPosData.c1.z = isDefault ? 0 : 1;
+            _agentPositionData[index] = agentPosData;
+        }
+        catch
+        {
+            //ignored
         }
     }
 
@@ -229,7 +292,7 @@ public class FlockManager : MonoBehaviour
 
 
     [BurstCompatible]
-    public struct FlockJob : IJobParallelFor
+    private struct FlockJob : IJobParallelFor
     {
         [ReadOnly] public float TimeDelta;
         [ReadOnly] public float AvoidDistance;
@@ -237,7 +300,7 @@ public class FlockManager : MonoBehaviour
         [ReadOnly] public int IndexMax;
         [ReadOnly] public NativeArray<float3x2> AgentPositionData;
         [WriteOnly] public NativeArray<float3> VelocityData;
-        [ReadOnly] public int indexCheckVar;
+        //properties
 
         public void Execute(int index)
         {
@@ -252,8 +315,8 @@ public class FlockManager : MonoBehaviour
             float3 agentCurPos = AgentPositionData[index].c0;
             float3 directAvoid = float3.zero;
             float curTeamNumber = AgentPositionData[index].c1.x;
-            int collisionCount = 0;
-            for (int i = 0; i < IndexMax; i++)
+            float curRadius = AgentPositionData[index].c1.y;
+            for (int i = 0; i <= IndexMax; i++)
             {
                 if (index == i || AgentPositionData[i].Equals(default) ||
                     curTeamNumber < AgentPositionData[i].c1.x) continue;
@@ -294,13 +357,13 @@ public class FlockManager : MonoBehaviour
 
                 float distance = math.length(vtFore);
 
-                if (distance > AvoidDistance) continue;
+                float distanceSet = AvoidDistance + curRadius + AgentPositionData[i].c1.y;
 
-                collisionCount++;
+                if (distance > distanceSet) continue;
 
                 vtFore = math.normalize(vtFore);
 
-                directAvoid += vtFore * (AvoidDistance - distance);
+                directAvoid += vtFore * (distanceSet - distance);
             }
 
             if (!directAvoid.Equals(float3.zero))

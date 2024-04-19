@@ -10,20 +10,17 @@ using UnityEngine.AI;
 
 public class AgentFlock : MonoBehaviour
 {
-    public int Index
-    {
-        get => _index;
-        set => _index = value;
-    }
+    public int index;
 
     public NavMeshAgent NavAgent;
     public float ReachDistance;
     public float RemainingDistance;
-    
+    public int ID;
     private FlockManager _flockManager;
     private bool CalculatePath;
-    [SerializeField] private int _index;
-
+    public Transform myTrans;
+    public float Radius;
+    
     private void Awake()
     {
         if (!NavAgent)
@@ -32,7 +29,9 @@ public class AgentFlock : MonoBehaviour
         }
 
         CalculatePath = false;
-        Index = -1;
+        index = -1;
+        myTrans = transform;
+        ID = myTrans.GetInstanceID();
     }
 
     private void OnEnable()
@@ -44,7 +43,6 @@ public class AgentFlock : MonoBehaviour
     private void OnLeftClick(object obj)
     {
         if (obj == null) return;
-        Debug.Log($"Right Click {Index}");
         OnRightClick(null);
         DelayToRenderComplete((Vector3)obj);
     }
@@ -56,7 +54,7 @@ public class AgentFlock : MonoBehaviour
 
     private void OnDisable()
     {
-        _flockManager.RemoveAgent(Index, GetInstanceID());
+        _flockManager.RemoveAgent(index, GetInstanceID());
     }
 
     private void Start()
@@ -69,7 +67,7 @@ public class AgentFlock : MonoBehaviour
         if (FlockManager.Instance)
         {
             _flockManager = FlockManager.Instance;
-            _flockManager.AddAgent(this, Index, GetInstanceID());
+            _flockManager.AddAgent(this, index, GetInstanceID());
         }
     }
 
@@ -118,11 +116,10 @@ public class AgentFlock : MonoBehaviour
     }
 
 
-    public void Move(float3 velocity)
+    public void OnAvoidNeighbors(float3 velocity)
     {
         if (!velocity.Equals(float3.zero))
         {
-            Debug.Log($"Index : {Index} | velocity : {velocity}");
             Debug.DrawRay(transform.position, math.normalize(velocity) * 2f, Color.red);
         }
 

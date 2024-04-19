@@ -18,13 +18,10 @@ public class AgentFlock : MonoBehaviour
 
     public NavMeshAgent NavAgent;
     public float ReachDistance;
-    public int FrameCountDownSet;
     public float RemainingDistance;
-
+    
     private FlockManager _flockManager;
-    private List<float3> Paths;
     private bool CalculatePath;
-    private int _frameCountDownDelta;
     [SerializeField] private int _index;
 
     private void Awake()
@@ -34,8 +31,6 @@ public class AgentFlock : MonoBehaviour
             TryGetComponent(out NavAgent);
         }
 
-        Paths = new List<float3>();
-        _frameCountDownDelta = -1;
         CalculatePath = false;
         Index = -1;
     }
@@ -80,20 +75,6 @@ public class AgentFlock : MonoBehaviour
 
     private void Update()
     {
-        // if (Paths.Count > 0)
-        // {
-        //     for (int i = 0; i < Paths.Count - 1; i++)
-        //     {
-        //         if (i == 0)
-        //         {
-        //             Debug.DrawLine(transform.position, Paths[i], Color.blue);
-        //         }
-        //         else
-        //         {
-        //             Debug.DrawLine(Paths[i + 1], Paths[i], Color.blue);
-        //         }
-        //     }
-        // }
 
         if (!NavAgent.isStopped && NavAgent.path.corners.Length > 1)
         {
@@ -130,7 +111,6 @@ public class AgentFlock : MonoBehaviour
             await Task.Yield();
         }
 
-        _frameCountDownDelta = FrameCountDownSet;
         if (NavAgent.isOnNavMesh)
         {
             NavAgent.isStopped = false;
@@ -147,25 +127,5 @@ public class AgentFlock : MonoBehaviour
         }
 
         NavAgent.Move(velocity);
-
-        // if (Paths.Count > 0)
-        // {
-        //     Vector3 vt = Paths[0];
-        //     transform.rotation = Quaternion.LookRotation(vt - transform.position);
-        //     if (math.length((float3)transform.position - Paths[0]) <= ReachDistance)
-        //     {
-        //         Paths.RemoveAt(0);
-        //     }
-        //
-        //     if (Paths.Count > 0 && _frameCountDownDelta > 0)
-        //     {
-        //         _frameCountDownDelta--;
-        //         if (_frameCountDownDelta == 0)
-        //         {
-        //             // NavAgent.SetDestination(Paths[0]);
-        //             _frameCountDownDelta = FrameCountDownSet;
-        //         }
-        //     }
-        // }
     }
 }

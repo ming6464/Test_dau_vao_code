@@ -20,7 +20,10 @@ public class AgentFlock : MonoBehaviour
     private bool CalculatePath;
     public Transform myTrans;
     public float Radius;
-    
+
+    public float radiusCheckFieldOfView;
+    public float fieldOfView;
+    public float densityDraw;
     private void Awake()
     {
         if (!NavAgent)
@@ -76,10 +79,10 @@ public class AgentFlock : MonoBehaviour
 
         if (!NavAgent.isStopped && NavAgent.path.corners.Length > 1)
         {
-            for (int i = 0; i < NavAgent.path.corners.Length - 1; i++)
-            {
-                Debug.DrawLine(NavAgent.path.corners[i + 1], NavAgent.path.corners[i], Color.green);
-            }
+            // for (int i = 0; i < NavAgent.path.corners.Length - 1; i++)
+            // {
+            //     Debug.DrawLine(NavAgent.path.corners[i + 1], NavAgent.path.corners[i], Color.green);
+            // }
 
             RemainingDistance = NavAgent.remainingDistance;
         }
@@ -95,6 +98,14 @@ public class AgentFlock : MonoBehaviour
         NavAgent.avoidancePriority = 0 + team;
     }
 
+    public void HandleStop(bool isStop)
+    {
+        if (NavAgent.isOnNavMesh)
+        {
+            NavAgent.isStopped = isStop;
+        }
+    }
+    
     private async void DelayToRenderComplete(Vector3 destination)
     {
         if (NavAgent.isOnNavMesh)
@@ -124,5 +135,44 @@ public class AgentFlock : MonoBehaviour
         }
 
         NavAgent.Move(velocity);
+    }
+    
+    private void OnDrawGizmos()
+    {
+        try
+        {
+            Gizmos.color = Color.yellow;
+            Vector3 vt1 = transform.forward * radiusCheckFieldOfView;
+            Vector3 vt2 = (Quaternion.Euler(0, fieldOfView / 2f, 0) * vt1);
+            Vector3 vt3 = (Quaternion.Euler(0, -fieldOfView / 2f, 0) * vt1);
+            Vector3 pos1 = vt1 + transform.position;
+            Vector3 pos2 = vt2 + transform.position;
+            Vector3 pos3 = vt3 + transform.position;
+            float dotLength = math.abs(Vector3.Dot(vt2, vt1.normalized));
+
+            Gizmos.DrawLine(transform.position, pos2);
+            Gizmos.DrawLine(transform.position, pos3);
+            float add = (radiusCheckFieldOfView - dotLength) / densityDraw;
+            Vector3 pos4 = pos2, pos5 = pos3;
+            for (float i = dotLength + add; i < radiusCheckFieldOfView; i += add)
+            {
+                // Tính cos(góc giữa c và a)
+                float cosTheta = i / radiusCheckFieldOfView;
+                float angle = Mathf.Acos(cosTheta) * Mathf.Rad2Deg;
+                Vector3 pos_4 = (Quaternion.Euler(0, angle, 0) * vt1) + transform.position;
+                Vector3 pos_5 = (Quaternion.Euler(0, -angle, 0) * vt1) + transform.position;
+                Gizmos.DrawLine(pos4, pos_4);
+                Gizmos.DrawLine(pos5, pos_5);
+                pos4 = pos_4;
+                pos5 = pos_5;
+            }
+
+            Gizmos.DrawLine(pos1, pos4);
+            Gizmos.DrawLine(pos1, pos5);
+        }
+        catch
+        {
+            //ignored
+        }
     }
 }

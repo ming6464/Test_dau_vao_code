@@ -175,7 +175,7 @@ public static class MathJob
 
     public static float Angle(float3 a, float3 b)
     {
-        return math.acos(math.dot(a, b) / (math.length(a) * math.length(b)));
+        return RadiansToDegree(math.acos(math.dot(a, math.normalize(b)) / math.length(a)));
     }
 
     #endregion

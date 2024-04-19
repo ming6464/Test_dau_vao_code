@@ -20,18 +20,24 @@ public class FlockManager : MonoBehaviour
 
     [Tooltip("Khoảng giữa 2 bot"), Range(0, 5f), SerializeField]
     private float _avoidDistance = .5f;
-
-    [Range(1, 10), SerializeField] private int _teamCapacity = 5;
     
+    
+    [Range(1, 10), SerializeField] private int _teamCapacity = 5;
+    [SerializeField] private Vector3 _destination;
     [SerializeField] private float _distanceStartCheck;
+    [Range(1,360)]
     [SerializeField] private float _fieldOfView;
     [SerializeField] private float _radiusCheckFieldOfView;
-    
+    [Min(0)]
+    [SerializeField] private int _densityCheck;
+    [Min(1)]
+    [SerializeField] private float _densityDraw = 5;
     private int _batchSize = 64;
 
     //"LIST"
     private AgentFlock[] _agentFlocks;
-    private NativeArray<float3x2> _agentPositionData;
+    private NativeArray<float3x3> _agentPositionData;
+    private NativeArray<int> _agentPriority;
     private JobHandle _jobHandle;
     private NativeArray<float3> _velocityData;
     private NativeList<int> _indexAdd;
@@ -51,26 +57,51 @@ public class FlockManager : MonoBehaviour
         Init();
     }
 
-    private void OnDrawGizmos()
+    private void OnEnable()
     {
-        Gizmos.color = Color.yellow;
-        Vector3 pos1 = ((Quaternion.Euler(0, _fieldOfView / 2, 0) * transform.forward) * _fieldOfView) + transform.position;
-        Vector3 pos2 = ((Quaternion.Euler(0, -_fieldOfView / 2, 0) * transform.forward) * _fieldOfView) + transform.position;
-        Gizmos.DrawLine(transform.position,pos1);
-        Gizmos.DrawLine(transform.position,pos2);
+        EventDispatcher.Instance.RegisterListener(EventID.LeftClick, OnLeftClick);
     }
+
+    private void OnValidate()
+    {
+        try
+        {
+            foreach (var agent in _agentFlocks)
+            {
+                if(!agent) continue;
+                agent.radiusCheckFieldOfView = _radiusCheckFieldOfView;
+                agent.densityDraw = _densityDraw;
+                agent.fieldOfView = _fieldOfView;
+            }
+        }
+        catch
+        {
+            //ignored
+        }
+        
+    }
+
+    private void OnLeftClick(object obj)
+    {
+        return;
+        if(obj == null) return;
+        _destination = (Vector3)obj;
+    }
+    
 
     private void Init()
     {
         _agentFlocks = new AgentFlock[_population];
-        _agentPositionData = new NativeArray<float3x2>(_population, Allocator.Persistent);
+        _agentPositionData = new NativeArray<float3x3>(_population, Allocator.Persistent);
+        _agentPriority = new NativeArray<int>(_population, Allocator.Persistent);
         _velocityData = new NativeArray<float3>(_population, Allocator.Persistent);
         _indexAdd = new NativeList<int>(Allocator.Persistent);
     }
-
-
+    
     private void Update()
     {
+        Debug.DrawLine(_destination,_destination + Vector3.up, Color.red);
+        
         if (_indexMax <= 0) return;
         _indexMax = math.min(_indexMax, _population - 1);
         _jobHandle.Complete();
@@ -78,13 +109,21 @@ public class FlockManager : MonoBehaviour
         UpdateDataList();
         ScheduleAgent();
     }
-
-
+    
     private void OnDisable()
     {
         try
         {
             _agentPositionData.Dispose();
+        }
+        catch
+        {
+            //ignore
+        }
+        
+        try
+        {
+            _agentPriority.Dispose();
         }
         catch
         {
@@ -113,16 +152,21 @@ public class FlockManager : MonoBehaviour
     #endregion
 
     #region PRIVATE METHOD
-
+    
     private void ApplyVelocity()
     {
-        bool check;
         for (int i = 0; i <= _indexMax; i++)
         {
-            if (!_agentFlocks[i]) continue;
-            check = !_indexAdd.Contains(i) && _agentPositionData[i].c1.z == 0;
-            if (!check) continue;
+            if (!_agentFlocks[i] ||_indexAdd.Contains(i)) continue;
+            if (_agentPositionData[i].c2.z - 1 == 0 || _agentPriority[i] - 1 == 0) continue;
             _agentFlocks[i].OnAvoidNeighbors(_velocityData[i]);
+        }
+
+        for (int i = 0; i <= _indexMax; i++)
+        {
+            if (!_agentFlocks[i] ||_indexAdd.Contains(i)) continue;
+            _agentFlocks[i].HandleStop(_agentPriority[i] == 1);
+            Debug.Log($" {i} is stop :  {_agentPriority[i] == 1}");
         }
 
         _indexAdd.Clear();
@@ -167,6 +211,11 @@ public class FlockManager : MonoBehaviour
                 continue;
             }
 
+            if (_agentPositionData[i].c2.z - 1 == 0)
+            {
+                continue;
+            }
+
             number++;
             if (number > _teamCapacity)
             {
@@ -175,20 +224,19 @@ public class FlockManager : MonoBehaviour
             }
 
             int team = teamNumber;
-
-            if (_agentPositionData[i].c1.z - 1 == 0)
-            {
-                team = 0;
-                teamNumber--;
-            }
-            else if (Math.Abs(_agentFlocks[i].RemainingDistance - 999) < 0.01f)
+            float3x3 agentPosData = _agentPositionData[i];
+            
+            if (Math.Abs(_agentFlocks[i].RemainingDistance - 999) < 0.01f)
             {
                 team = 999;
             }
 
             _agentFlocks[i].index = i;
-            _agentPositionData[i] = new float3x2(_agentFlocks[i].transform.position,
-                new float3(team, _agentFlocks[i].Radius, 0));
+            agentPosData.c0 = _agentFlocks[i].myTrans.position;
+            agentPosData.c2.x = team;
+            agentPosData.c2.y = _agentFlocks[i].Radius;
+            agentPosData.c1 = _agentFlocks[i].myTrans.forward;
+            _agentPositionData[i] = agentPosData;
         }
     }
 
@@ -200,7 +248,13 @@ public class FlockManager : MonoBehaviour
             Speed = _speed,
             AgentPositionData = _agentPositionData,
             VelocityData = _velocityData,
+            AgentPriority = _agentPriority,
+            RadiusCheckFieldOfView = _radiusCheckFieldOfView,
+            DistanceStartCheck = _distanceStartCheck,
+            Destination = _destination,
             IndexMax = _indexMax,
+            DensityCheck = _densityCheck,
+            FieldOfView = _fieldOfView,
             TimeDelta = Time.deltaTime
         };
 
@@ -275,11 +329,11 @@ public class FlockManager : MonoBehaviour
 
             if (_agentPositionData[index].Equals(default))
             {
-                _agentPositionData[index] = new float3x2(float3.zero, float3.zero);
+                _agentPositionData[index] = float3x3.zero;
             }
 
-            float3x2 agentPosData = _agentPositionData[index];
-            agentPosData.c1.z = isDefault ? 0 : 1;
+            float3x3 agentPosData = _agentPositionData[index];
+            agentPosData.c2.z = isDefault ? 0 : 1;
             _agentPositionData[index] = agentPosData;
         }
         catch
@@ -298,15 +352,23 @@ public class FlockManager : MonoBehaviour
         [ReadOnly] public float AvoidDistance;
         [ReadOnly] public float Speed;
         [ReadOnly] public int IndexMax;
-        [ReadOnly] public NativeArray<float3x2> AgentPositionData;
+        [ReadOnly] public float FieldOfView;
+        [ReadOnly] public float RadiusCheckFieldOfView;
+        [ReadOnly] public float DistanceStartCheck;
+        [ReadOnly] public int DensityCheck;
+        [ReadOnly] public float3 Destination;
+        [ReadOnly] public NativeArray<float3x3> AgentPositionData;
         [WriteOnly] public NativeArray<float3> VelocityData;
+        [WriteOnly] public NativeArray<int> AgentPriority;
+        
+        
         //properties
 
         public void Execute(int index)
         {
             if (IndexMax < index) return;
-            if (AgentPositionData[index].Equals(default)) return;
-            var random = new Random((uint)(index + 1));
+            if (AgentPositionData[index].Equals(default) || AgentPositionData[index].c2.z - 1 == 0) return;
+            Random random = new Random((uint)(index + 1));
             VelocityData[index] = CalculateVT(index, random) * Speed * TimeDelta;
         }
 
@@ -314,12 +376,15 @@ public class FlockManager : MonoBehaviour
         {
             float3 agentCurPos = AgentPositionData[index].c0;
             float3 directAvoid = float3.zero;
-            float curTeamNumber = AgentPositionData[index].c1.x;
-            float curRadius = AgentPositionData[index].c1.y;
+            float curTeamNumber = AgentPositionData[index].c2.x;
+            float curRadius = AgentPositionData[index].c2.y;
+            float angleCheck = FieldOfView / 2f;
+            bool isCheck = math.distance(agentCurPos, Destination) <= DistanceStartCheck;
+            int agentInView = 0;
             for (int i = 0; i <= IndexMax; i++)
             {
-                if (index == i || AgentPositionData[i].Equals(default) ||
-                    curTeamNumber < AgentPositionData[i].c1.x) continue;
+                if (index == i || (AgentPositionData[index].c2.z >= 0 && curTeamNumber < AgentPositionData[i].c2.x)) continue;
+                
                 float3 vtFore = agentCurPos - AgentPositionData[i].c0;
 
                 if (vtFore.Equals(float3.zero))
@@ -354,17 +419,32 @@ public class FlockManager : MonoBehaviour
                         }
                     }
                 }
+                else if (isCheck)
+                {
+                    if (math.length(vtFore) <= RadiusCheckFieldOfView && math.abs(MathJob.Angle(AgentPositionData[index].c1,-vtFore)) <= angleCheck)
+                    {
+                        agentInView++;
+                        if (DensityCheck <= agentInView)
+                        {
+                            AgentPriority[index] = 1;
+                            return float3.zero;
+                        }
+                    }
+                }
 
                 float distance = math.length(vtFore);
 
-                float distanceSet = AvoidDistance + curRadius + AgentPositionData[i].c1.y;
-
+                float distanceSet = AvoidDistance + curRadius + AgentPositionData[i].c2.y;
+                
+                
                 if (distance > distanceSet) continue;
 
                 vtFore = math.normalize(vtFore);
 
                 directAvoid += vtFore * (distanceSet - distance);
             }
+
+            AgentPriority[index] = 0;
 
             if (!directAvoid.Equals(float3.zero))
             {
@@ -391,5 +471,46 @@ public class FlockManager : MonoBehaviour
 
             return directAvoid;
         }
+    }
+    
+    private void OnDrawGizmos()
+    {
+        try
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawCube(_destination,new Vector3(_distanceStartCheck * 2,.2f,_distanceStartCheck * 2));
+            Gizmos.color = Color.yellow;
+            Vector3 vt1 = transform.forward * _radiusCheckFieldOfView;
+            Vector3 vt2 = (Quaternion.Euler(0, _fieldOfView / 2f, 0) * vt1);
+            Vector3 vt3 = (Quaternion.Euler(0, -_fieldOfView / 2f, 0) * vt1);
+            Vector3 pos1 =  vt1 + transform.position;
+            Vector3 pos2 = vt2 + transform.position;
+            Vector3 pos3 = vt3 + transform.position;
+            float dotLength = math.abs(Vector3.Dot(vt2, vt1.normalized));
+        
+            Gizmos.DrawLine(transform.position,pos2);
+            Gizmos.DrawLine(transform.position,pos3);
+            float add = (_radiusCheckFieldOfView - dotLength) / _densityDraw;
+            Vector3 pos4 = pos2, pos5 = pos3;
+            for (float i = dotLength + add; i < _radiusCheckFieldOfView; i += add)
+            {
+                // Tính cos(góc giữa c và a)
+                float cosTheta = i / _radiusCheckFieldOfView;
+                float angle = Mathf.Acos(cosTheta) * Mathf.Rad2Deg;
+                Vector3 pos_4 = (Quaternion.Euler(0,angle,0) * vt1) + transform.position;
+                Vector3 pos_5 = (Quaternion.Euler(0, -angle, 0) * vt1) + transform.position;
+                Gizmos.DrawLine(pos4, pos_4);
+                Gizmos.DrawLine(pos5,pos_5);
+                pos4 = pos_4;
+                pos5 = pos_5;
+            }
+            Gizmos.DrawLine(pos1,pos4);
+            Gizmos.DrawLine(pos1,pos5);
+        }
+        catch
+        {
+            //ignored
+        }
+        
     }
 }

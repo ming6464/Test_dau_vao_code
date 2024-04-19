@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.30692244, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -4077,13 +4077,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _population: 1000
   _speed: 2
-  _avoidDistance: 0.6
+  _avoidDistance: 1.7
   _teamCapacity: 5
-  _destination: {x: -42.25, y: 0, z: 146.17}
-  _distanceStartCheck: 24.2
+  _destination: {x: -42.25, y: -0.6, z: 146.17}
+  _distanceStartCheck: 49.58
   _fieldOfView: 141.5
-  _radiusCheckFieldOfView: 5.3
-  _densityCheck: 0
+  _radiusCheckFieldOfView: 6.5
+  _densityCheck: 4
   _densityDraw: 119.4
   _indexMax: 84
 --- !u!4 &344646650
@@ -15483,13 +15483,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1700494563}
-  m_LocalRotation: {x: 0.48435158, y: 0, z: 0, w: 0.87487346}
-  m_LocalPosition: {x: -36.7, y: 166, z: -116.3}
+  m_LocalRotation: {x: 0.48511493, y: 0, z: 0, w: 0.87445045}
+  m_LocalPosition: {x: -37, y: 101, z: 29}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 57.94, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 58.04, y: 0, z: 0}
 --- !u!1 &1711376291
 GameObject:
   m_ObjectHideFlags: 0

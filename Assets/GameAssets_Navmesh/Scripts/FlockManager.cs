@@ -20,18 +20,15 @@ public class FlockManager : MonoBehaviour
 
     [Tooltip("Khoảng giữa 2 bot"), Range(0, 5f), SerializeField]
     private float _avoidDistance = .5f;
-    
-    
+
+
     [Range(1, 10), SerializeField] private int _teamCapacity = 5;
     [SerializeField] private Vector3 _destination;
     [SerializeField] private float _distanceStartCheck;
-    [Range(1,360)]
-    [SerializeField] private float _fieldOfView;
+    [Range(1, 360)] [SerializeField] private float _fieldOfView;
     [SerializeField] private float _radiusCheckFieldOfView;
-    [Min(0)]
-    [SerializeField] private int _densityCheck;
-    [Min(1)]
-    [SerializeField] private float _densityDraw = 5;
+    [Min(0)] [SerializeField] private int _densityCheck;
+    [Min(1)] [SerializeField] private float _densityDraw = 5;
     private int _batchSize = 64;
 
     //"LIST"
@@ -68,7 +65,7 @@ public class FlockManager : MonoBehaviour
         {
             foreach (var agent in _agentFlocks)
             {
-                if(!agent) continue;
+                if (!agent) continue;
                 agent.radiusCheckFieldOfView = _radiusCheckFieldOfView;
                 agent.densityDraw = _densityDraw;
                 agent.fieldOfView = _fieldOfView;
@@ -78,16 +75,15 @@ public class FlockManager : MonoBehaviour
         {
             //ignored
         }
-        
     }
 
     private void OnLeftClick(object obj)
     {
         return;
-        if(obj == null) return;
+        if (obj == null) return;
         _destination = (Vector3)obj;
     }
-    
+
 
     private void Init()
     {
@@ -97,11 +93,11 @@ public class FlockManager : MonoBehaviour
         _velocityData = new NativeArray<float3>(_population, Allocator.Persistent);
         _indexAdd = new NativeList<int>(Allocator.Persistent);
     }
-    
+
     private void Update()
     {
-        Debug.DrawLine(_destination,_destination + Vector3.up, Color.red);
-        
+        Debug.DrawLine(_destination, _destination + Vector3.up, Color.red);
+
         if (_indexMax <= 0) return;
         _indexMax = math.min(_indexMax, _population - 1);
         _jobHandle.Complete();
@@ -109,7 +105,7 @@ public class FlockManager : MonoBehaviour
         UpdateDataList();
         ScheduleAgent();
     }
-    
+
     private void OnDisable()
     {
         try
@@ -120,7 +116,7 @@ public class FlockManager : MonoBehaviour
         {
             //ignore
         }
-        
+
         try
         {
             _agentPriority.Dispose();
@@ -152,19 +148,19 @@ public class FlockManager : MonoBehaviour
     #endregion
 
     #region PRIVATE METHOD
-    
+
     private void ApplyVelocity()
     {
         for (int i = 0; i <= _indexMax; i++)
         {
-            if (!_agentFlocks[i] ||_indexAdd.Contains(i)) continue;
+            if (!_agentFlocks[i] || _indexAdd.Contains(i)) continue;
             if (_agentPositionData[i].c2.z - 1 == 0 || _agentPriority[i] - 1 == 0) continue;
             _agentFlocks[i].OnAvoidNeighbors(_velocityData[i]);
         }
 
         for (int i = 0; i <= _indexMax; i++)
         {
-            if (!_agentFlocks[i] ||_indexAdd.Contains(i)) continue;
+            if (!_agentFlocks[i] || _indexAdd.Contains(i)) continue;
             _agentFlocks[i].HandleStop(_agentPriority[i] == 1);
             Debug.Log($" {i} is stop :  {_agentPriority[i] == 1}");
         }
@@ -225,7 +221,7 @@ public class FlockManager : MonoBehaviour
 
             int team = teamNumber;
             float3x3 agentPosData = _agentPositionData[i];
-            
+
             if (Math.Abs(_agentFlocks[i].RemainingDistance - 999) < 0.01f)
             {
                 team = 999;
@@ -280,6 +276,9 @@ public class FlockManager : MonoBehaviour
 
                 _indexAdd.Add(i);
                 agent.index = i;
+                agent.radiusCheckFieldOfView = _radiusCheckFieldOfView;
+                agent.densityDraw = _densityDraw;
+                agent.fieldOfView = _fieldOfView;
                 _agentFlocks[i] = agent;
                 return;
             }
@@ -360,8 +359,8 @@ public class FlockManager : MonoBehaviour
         [ReadOnly] public NativeArray<float3x3> AgentPositionData;
         [WriteOnly] public NativeArray<float3> VelocityData;
         [WriteOnly] public NativeArray<int> AgentPriority;
-        
-        
+
+
         //properties
 
         public void Execute(int index)
@@ -383,8 +382,9 @@ public class FlockManager : MonoBehaviour
             int agentInView = 0;
             for (int i = 0; i <= IndexMax; i++)
             {
-                if (index == i || (AgentPositionData[index].c2.z >= 0 && curTeamNumber < AgentPositionData[i].c2.x)) continue;
-                
+                if (index == i ||
+                    (AgentPositionData[index].c2.z >= 0 && curTeamNumber < AgentPositionData[i].c2.x)) continue;
+
                 float3 vtFore = agentCurPos - AgentPositionData[i].c0;
 
                 if (vtFore.Equals(float3.zero))
@@ -419,9 +419,11 @@ public class FlockManager : MonoBehaviour
                         }
                     }
                 }
-                else if (isCheck)
+
+                if (isCheck)
                 {
-                    if (math.length(vtFore) <= RadiusCheckFieldOfView && math.abs(MathJob.Angle(AgentPositionData[index].c1,-vtFore)) <= angleCheck)
+                    if (math.length(vtFore) <= RadiusCheckFieldOfView &&
+                        math.abs(MathJob.Angle(AgentPositionData[index].c1, vtFore)) <= angleCheck)
                     {
                         agentInView++;
                         if (DensityCheck <= agentInView)
@@ -435,8 +437,8 @@ public class FlockManager : MonoBehaviour
                 float distance = math.length(vtFore);
 
                 float distanceSet = AvoidDistance + curRadius + AgentPositionData[i].c2.y;
-                
-                
+
+
                 if (distance > distanceSet) continue;
 
                 vtFore = math.normalize(vtFore);
@@ -472,24 +474,24 @@ public class FlockManager : MonoBehaviour
             return directAvoid;
         }
     }
-    
+
     private void OnDrawGizmos()
     {
         try
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawCube(_destination,new Vector3(_distanceStartCheck * 2,.2f,_distanceStartCheck * 2));
+            Gizmos.DrawCube(_destination, new Vector3(_distanceStartCheck * 2, .2f, _distanceStartCheck * 2));
             Gizmos.color = Color.yellow;
             Vector3 vt1 = transform.forward * _radiusCheckFieldOfView;
             Vector3 vt2 = (Quaternion.Euler(0, _fieldOfView / 2f, 0) * vt1);
             Vector3 vt3 = (Quaternion.Euler(0, -_fieldOfView / 2f, 0) * vt1);
-            Vector3 pos1 =  vt1 + transform.position;
+            Vector3 pos1 = vt1 + transform.position;
             Vector3 pos2 = vt2 + transform.position;
             Vector3 pos3 = vt3 + transform.position;
             float dotLength = math.abs(Vector3.Dot(vt2, vt1.normalized));
-        
-            Gizmos.DrawLine(transform.position,pos2);
-            Gizmos.DrawLine(transform.position,pos3);
+
+            Gizmos.DrawLine(transform.position, pos2);
+            Gizmos.DrawLine(transform.position, pos3);
             float add = (_radiusCheckFieldOfView - dotLength) / _densityDraw;
             Vector3 pos4 = pos2, pos5 = pos3;
             for (float i = dotLength + add; i < _radiusCheckFieldOfView; i += add)
@@ -497,20 +499,20 @@ public class FlockManager : MonoBehaviour
                 // Tính cos(góc giữa c và a)
                 float cosTheta = i / _radiusCheckFieldOfView;
                 float angle = Mathf.Acos(cosTheta) * Mathf.Rad2Deg;
-                Vector3 pos_4 = (Quaternion.Euler(0,angle,0) * vt1) + transform.position;
+                Vector3 pos_4 = (Quaternion.Euler(0, angle, 0) * vt1) + transform.position;
                 Vector3 pos_5 = (Quaternion.Euler(0, -angle, 0) * vt1) + transform.position;
                 Gizmos.DrawLine(pos4, pos_4);
-                Gizmos.DrawLine(pos5,pos_5);
+                Gizmos.DrawLine(pos5, pos_5);
                 pos4 = pos_4;
                 pos5 = pos_5;
             }
-            Gizmos.DrawLine(pos1,pos4);
-            Gizmos.DrawLine(pos1,pos5);
+
+            Gizmos.DrawLine(pos1, pos4);
+            Gizmos.DrawLine(pos1, pos5);
         }
         catch
         {
             //ignored
         }
-        
     }
 }

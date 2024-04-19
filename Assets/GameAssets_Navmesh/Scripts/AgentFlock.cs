@@ -24,6 +24,11 @@ public class AgentFlock : MonoBehaviour
     public float radiusCheckFieldOfView;
     public float fieldOfView;
     public float densityDraw;
+
+    public Color colorStop;
+    public Color colorRun;
+    private Color myColor;
+
     private void Awake()
     {
         if (!NavAgent)
@@ -35,6 +40,7 @@ public class AgentFlock : MonoBehaviour
         index = -1;
         myTrans = transform;
         ID = myTrans.GetInstanceID();
+        myColor = colorRun;
     }
 
     private void OnEnable()
@@ -76,7 +82,6 @@ public class AgentFlock : MonoBehaviour
 
     private void Update()
     {
-
         if (!NavAgent.isStopped && NavAgent.path.corners.Length > 1)
         {
             // for (int i = 0; i < NavAgent.path.corners.Length - 1; i++)
@@ -104,8 +109,10 @@ public class AgentFlock : MonoBehaviour
         {
             NavAgent.isStopped = isStop;
         }
+
+        myColor = isStop ? colorStop : colorRun;
     }
-    
+
     private async void DelayToRenderComplete(Vector3 destination)
     {
         if (NavAgent.isOnNavMesh)
@@ -136,12 +143,12 @@ public class AgentFlock : MonoBehaviour
 
         NavAgent.Move(velocity);
     }
-    
+
     private void OnDrawGizmos()
     {
         try
         {
-            Gizmos.color = Color.yellow;
+            Gizmos.color = myColor;
             Vector3 vt1 = transform.forward * radiusCheckFieldOfView;
             Vector3 vt2 = (Quaternion.Euler(0, fieldOfView / 2f, 0) * vt1);
             Vector3 vt3 = (Quaternion.Euler(0, -fieldOfView / 2f, 0) * vt1);

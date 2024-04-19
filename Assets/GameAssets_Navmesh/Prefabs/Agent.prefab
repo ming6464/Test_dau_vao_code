@@ -200,7 +200,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
 --- !u!114 &7768823422269443841
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -213,11 +213,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc90455d5ae52bd438a12c4c4f7491c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  index: 0
   NavAgent: {fileID: 7768823422269443853}
   ReachDistance: 0
-  FrameCountDownSet: 2
-  Force:
-    x: 0
-    y: 0
-    z: 0
-  _index: 0
+  RemainingDistance: 0
+  ID: 0
+  myTrans: {fileID: 0}
+  Radius: 0
+  radiusCheckFieldOfView: 0
+  fieldOfView: 0
+  densityDraw: 0
+  colorStop: {r: 1, g: 0, b: 0, a: 1}
+  colorRun: {r: 1, g: 0.82307357, b: 0, a: 1}

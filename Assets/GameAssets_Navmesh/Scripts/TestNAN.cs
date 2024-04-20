@@ -21,7 +21,6 @@ public class TestNAN : MonoBehaviour
     
     private float Angle180Clockwise(Vector3 start, Vector3 dir)
     {
-        
         return Vector2.SignedAngle(new Vector2(start.x, start.z), new Vector2(dir.x, dir.z));
     }
 }

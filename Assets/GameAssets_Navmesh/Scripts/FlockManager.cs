@@ -30,13 +30,12 @@ public class FlockManager : MonoBehaviour
     [Min(0)] [SerializeField] private int _densityCheck;
     [Min(1)] [SerializeField] private float _densityDraw = 5;
     private int _batchSize = 64;
-
+    
     //"LIST"
     private AgentFlock[] _agentFlocks;
     private NativeArray<float3x3> _agentPositionData;
-    private NativeArray<int> _agentPriority;
     private JobHandle _jobHandle;
-    private NativeArray<float3> _velocityData;
+    private NativeArray<FlockWriteData> _flockWriteDatas;
     private NativeList<int> _indexAdd;
     public int _indexMax;
 
@@ -89,8 +88,7 @@ public class FlockManager : MonoBehaviour
     {
         _agentFlocks = new AgentFlock[_population];
         _agentPositionData = new NativeArray<float3x3>(_population, Allocator.Persistent);
-        _agentPriority = new NativeArray<int>(_population, Allocator.Persistent);
-        _velocityData = new NativeArray<float3>(_population, Allocator.Persistent);
+        _flockWriteDatas = new NativeArray<FlockWriteData>(_population, Allocator.Persistent);
         _indexAdd = new NativeList<int>(Allocator.Persistent);
     }
 
@@ -119,21 +117,13 @@ public class FlockManager : MonoBehaviour
 
         try
         {
-            _agentPriority.Dispose();
+            _flockWriteDatas.Dispose();
         }
         catch
         {
             //ignore
         }
-
-        try
-        {
-            _velocityData.Dispose();
-        }
-        catch
-        {
-            //ignore
-        }
+        
 
         try
         {
@@ -154,20 +144,19 @@ public class FlockManager : MonoBehaviour
         for (int i = 0; i <= _indexMax; i++)
         {
             if (!_agentFlocks[i] || _indexAdd.Contains(i)) continue;
-            if (_agentPositionData[i].c2.z - 1 == 0 || _agentPriority[i] - 1 == 0) continue;
-            _agentFlocks[i].OnAvoidNeighbors(_velocityData[i]);
+            // if (_agentPositionData[i].c2.z - 1 == 0 || _agentPriority[i] - 1 == 0) continue;
+            _agentFlocks[i].OnAvoidNeighbors(_flockWriteDatas[i].velocity);
         }
 
         for (int i = 0; i <= _indexMax; i++)
         {
             if (!_agentFlocks[i] || _indexAdd.Contains(i)) continue;
-            _agentFlocks[i].HandleStop(_agentPriority[i] == 1);
-            Debug.Log($" {i} is stop :  {_agentPriority[i] == 1}");
+            _agentFlocks[i].HandleStop(_flockWriteDatas[i].isBlocked == 1);
+            Debug.Log($"index : {i} * name : {_agentFlocks[i].name} stop :  {_flockWriteDatas[i].isBlocked == 1}");
         }
 
         _indexAdd.Clear();
     }
-
     private void UpdateDataList()
     {
         int[] listSort = new int[_indexMax + 1];
@@ -206,12 +195,7 @@ public class FlockManager : MonoBehaviour
                 _agentPositionData[i] = default;
                 continue;
             }
-
-            if (_agentPositionData[i].c2.z - 1 == 0)
-            {
-                continue;
-            }
-
+            
             number++;
             if (number > _teamCapacity)
             {
@@ -227,12 +211,24 @@ public class FlockManager : MonoBehaviour
                 team = 999;
             }
 
+            if (_agentPositionData[i].c2.z - 1 == 0 || _flockWriteDatas[i].isBlocked == 1)
+            {
+                team = -1;
+                number--;
+            }
+
             _agentFlocks[i].index = i;
             agentPosData.c0 = _agentFlocks[i].myTrans.position;
             agentPosData.c2.x = team;
             agentPosData.c2.y = _agentFlocks[i].Radius;
-            agentPosData.c1 = _agentFlocks[i].myTrans.forward;
+            agentPosData.c1 = _agentFlocks[i].forward;
             _agentPositionData[i] = agentPosData;
+        }
+
+        for (int i = 0; i <= _indexMax; i ++)
+        {
+            if(!_agentFlocks[i]) continue;
+            _agentFlocks[i].SetName(i.ToString());
         }
     }
 
@@ -243,8 +239,7 @@ public class FlockManager : MonoBehaviour
             AvoidDistance = _avoidDistance,
             Speed = _speed,
             AgentPositionData = _agentPositionData,
-            VelocityData = _velocityData,
-            AgentPriority = _agentPriority,
+            FlockWriteDatas = _flockWriteDatas,
             RadiusCheckFieldOfView = _radiusCheckFieldOfView,
             DistanceStartCheck = _distanceStartCheck,
             Destination = _destination,
@@ -357,8 +352,7 @@ public class FlockManager : MonoBehaviour
         [ReadOnly] public int DensityCheck;
         [ReadOnly] public float3 Destination;
         [ReadOnly] public NativeArray<float3x3> AgentPositionData;
-        [WriteOnly] public NativeArray<float3> VelocityData;
-        [WriteOnly] public NativeArray<int> AgentPriority;
+        [WriteOnly] public NativeArray<FlockWriteData> FlockWriteDatas;
 
 
         //properties
@@ -368,10 +362,10 @@ public class FlockManager : MonoBehaviour
             if (IndexMax < index) return;
             if (AgentPositionData[index].Equals(default) || AgentPositionData[index].c2.z - 1 == 0) return;
             Random random = new Random((uint)(index + 1));
-            VelocityData[index] = CalculateVT(index, random) * Speed * TimeDelta;
+            FlockWriteDatas[index] = CalculateVT(index, random);
         }
 
-        private float3 CalculateVT(int index, Random random)
+        private FlockWriteData CalculateVT(int index, Random random)
         {
             float3 agentCurPos = AgentPositionData[index].c0;
             float3 directAvoid = float3.zero;
@@ -379,11 +373,14 @@ public class FlockManager : MonoBehaviour
             float curRadius = AgentPositionData[index].c2.y;
             float angleCheck = FieldOfView / 2f;
             bool isCheck = math.distance(agentCurPos, Destination) <= DistanceStartCheck;
+            float3 forward = AgentPositionData[index].c1;
+            FlockWriteData flockWriteData;
+            flockWriteData.velocity = float3.zero;
+            flockWriteData.isBlocked = 0;
             int agentInView = 0;
             for (int i = 0; i <= IndexMax; i++)
             {
-                if (index == i ||
-                    (AgentPositionData[index].c2.z >= 0 && curTeamNumber < AgentPositionData[i].c2.x)) continue;
+                if (index == i || AgentPositionData[i].c2.z - 1 == 0) continue;
 
                 float3 vtFore = agentCurPos - AgentPositionData[i].c0;
 
@@ -422,17 +419,22 @@ public class FlockManager : MonoBehaviour
 
                 if (isCheck)
                 {
-                    if (math.length(vtFore) <= RadiusCheckFieldOfView &&
-                        math.abs(MathJob.Angle(AgentPositionData[index].c1, vtFore)) <= angleCheck)
+                    if ( !vtFore.Equals(float3.zero) &&  (math.length(vtFore) <= RadiusCheckFieldOfView &&
+                                                        math.abs(MathJob.Angle(forward, -vtFore)) <= angleCheck))
                     {
+                        
+                        JobLogger.Log($"index : {index} - : {i} of view | angle : { math.abs(MathJob.Angle(forward, -vtFore))} | angle check : {angleCheck}");
+                        
                         agentInView++;
                         if (DensityCheck <= agentInView)
                         {
-                            AgentPriority[index] = 1;
-                            return float3.zero;
+                            flockWriteData.isBlocked = 1;
+                            break;
                         }
                     }
                 }
+                
+                if (curTeamNumber < AgentPositionData[i].c2.x) continue;
 
                 float distance = math.length(vtFore);
 
@@ -445,8 +447,8 @@ public class FlockManager : MonoBehaviour
 
                 directAvoid += vtFore * (distanceSet - distance);
             }
-
-            AgentPriority[index] = 0;
+            
+            JobLogger.Log($"index : {index} + | is stop job : {flockWriteData.isBlocked} | ischeck : {isCheck} | agent in view : {agentInView}");
 
             if (!directAvoid.Equals(float3.zero))
             {
@@ -470,8 +472,10 @@ public class FlockManager : MonoBehaviour
                     directAvoid.z = random.NextFloat(-.3f, .3f);
                 }
             }
-
-            return directAvoid;
+            
+            flockWriteData.velocity = directAvoid * Speed * TimeDelta;
+            
+            return flockWriteData;
         }
     }
 
@@ -514,5 +518,11 @@ public class FlockManager : MonoBehaviour
         {
             //ignored
         }
+    }
+    
+    private struct FlockWriteData
+    {
+        public float3 velocity;
+        public int isBlocked;
     }
 }

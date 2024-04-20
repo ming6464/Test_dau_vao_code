@@ -11,8 +11,9 @@ using UnityEngine.AI;
 public class AgentFlock : MonoBehaviour
 {
     public int index;
-
+    
     public NavMeshAgent NavAgent;
+    public Vector3 forward = Vector3.zero;
     public float ReachDistance;
     public float RemainingDistance;
     public int ID;
@@ -43,6 +44,18 @@ public class AgentFlock : MonoBehaviour
         myColor = colorRun;
     }
 
+    public void SetName(string name)
+    {
+        try
+        {
+            transform.name = name;
+        }
+        catch
+        {
+            //ignored
+        }
+    }
+
     private void OnEnable()
     {
         EventDispatcher.Instance.RegisterListener(EventID.RightClick, OnRightClick);
@@ -52,6 +65,10 @@ public class AgentFlock : MonoBehaviour
     private void OnLeftClick(object obj)
     {
         if (obj == null) return;
+        if (NavAgent.isOnNavMesh)
+        {
+            NavAgent.speed = 5;
+        }
         OnRightClick(null);
         DelayToRenderComplete((Vector3)obj);
     }
@@ -92,6 +109,17 @@ public class AgentFlock : MonoBehaviour
             RemainingDistance = NavAgent.remainingDistance;
         }
 
+        try
+        {
+            forward = NavAgent.steeringTarget - myTrans.position;
+        }
+        catch
+        {
+            //ignored
+        }
+        
+        Debug.DrawRay(myTrans.position,myTrans.forward * 2f,myColor);
+
         if (NavAgent.isStopped)
         {
             RemainingDistance = 999;
@@ -107,9 +135,9 @@ public class AgentFlock : MonoBehaviour
     {
         if (NavAgent.isOnNavMesh)
         {
-            NavAgent.isStopped = isStop;
+            NavAgent.speed = isStop ? 0 : 5;
         }
-
+        Debug.Log($"index : {index} handlestop : {isStop}");
         myColor = isStop ? colorStop : colorRun;
     }
 

@@ -20,7 +20,7 @@ public class AgentFlock : MonoBehaviour
     private bool CalculatePath;
     public Transform myTrans;
     public float Radius;
-
+    public Vector3 forward;
     public float radiusCheckFieldOfView;
     public float fieldOfView;
     public float densityDraw;
@@ -28,6 +28,7 @@ public class AgentFlock : MonoBehaviour
     public Color colorStop;
     public Color colorRun;
     private Color myColor;
+    private Vector3 Destination;
 
     private void Awake()
     {
@@ -53,7 +54,8 @@ public class AgentFlock : MonoBehaviour
     {
         if (obj == null) return;
         OnRightClick(null);
-        DelayToRenderComplete((Vector3)obj);
+        Destination = (Vector3)obj;
+        DelayToRenderComplete(Destination);
     }
 
     private void OnRightClick(object obj)
@@ -95,6 +97,25 @@ public class AgentFlock : MonoBehaviour
         if (NavAgent.isStopped)
         {
             RemainingDistance = 999;
+        }
+
+        try
+        {
+            forward = NavAgent.steeringTarget - myTrans.position;
+        }
+        catch
+        {
+            //ignored
+        }
+
+        if (NavAgent.hasPath && Vector3.Distance(Destination, transform.position) <= ReachDistance)
+        {
+            _flockManager.EditPriority(false, index, ID);
+            NavAgent.ResetPath();
+        }
+        else
+        {
+            _flockManager.EditPriority(true, index, ID);
         }
     }
 
@@ -146,40 +167,51 @@ public class AgentFlock : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        try
-        {
-            Gizmos.color = myColor;
-            Vector3 vt1 = transform.forward * radiusCheckFieldOfView;
-            Vector3 vt2 = (Quaternion.Euler(0, fieldOfView / 2f, 0) * vt1);
-            Vector3 vt3 = (Quaternion.Euler(0, -fieldOfView / 2f, 0) * vt1);
-            Vector3 pos1 = vt1 + transform.position;
-            Vector3 pos2 = vt2 + transform.position;
-            Vector3 pos3 = vt3 + transform.position;
-            float dotLength = math.abs(Vector3.Dot(vt2, vt1.normalized));
+        DrawCircle(transform.position, radiusCheckFieldOfView, fieldOfView, forward, myColor, densityDraw);
 
-            Gizmos.DrawLine(transform.position, pos2);
-            Gizmos.DrawLine(transform.position, pos3);
-            float add = (radiusCheckFieldOfView - dotLength) / densityDraw;
-            Vector3 pos4 = pos2, pos5 = pos3;
-            for (float i = dotLength + add; i < radiusCheckFieldOfView; i += add)
+        void DrawCircle(float3 center, float radius, float angle, float3 forward, Color color, float detail = 5)
+        {
+            try
             {
-                // Tính cos(góc giữa c và a)
-                float cosTheta = i / radiusCheckFieldOfView;
-                float angle = Mathf.Acos(cosTheta) * Mathf.Rad2Deg;
-                Vector3 pos_4 = (Quaternion.Euler(0, angle, 0) * vt1) + transform.position;
-                Vector3 pos_5 = (Quaternion.Euler(0, -angle, 0) * vt1) + transform.position;
-                Gizmos.DrawLine(pos4, pos_4);
-                Gizmos.DrawLine(pos5, pos_5);
-                pos4 = pos_4;
-                pos5 = pos_5;
-            }
+                if (forward.Equals(float3.zero)) return;
+                if (angle > 360)
+                {
+                    angle %= 360;
+                }
 
-            Gizmos.DrawLine(pos1, pos4);
-            Gizmos.DrawLine(pos1, pos5);
-        }
-        catch
-        {
-            //ignored
+                Gizmos.color = color;
+                angle = math.abs(angle);
+                detail = math.max(detail, 5);
+                float angleReal = angle / 2f;
+                float3 vt0 = math.normalize(forward) * radius;
+                float3 point1 = MathJob.Rotate(vt0, new float3(0, angleReal, 0)) + center;
+                float3 point2 = MathJob.Rotate(vt0, new float3(0, -angleReal, 0)) + center;
+                float3 point3 = default;
+                float3 point4 = default;
+
+                if (angle < 360)
+                {
+                    Gizmos.DrawLine(center, point1);
+                    Gizmos.DrawLine(center, point2);
+                }
+
+                float add = angleReal / detail;
+                bool check = false;
+                for (float i = 1; i <= detail; i++)
+                {
+                    float angleReal2 = angleReal - i * add;
+                    point3 = MathJob.Rotate(vt0, new float3(0, angleReal2, 0)) + center;
+                    point4 = MathJob.Rotate(vt0, new float3(0, -angleReal2, 0)) + center;
+                    Gizmos.DrawLine(point1, point3);
+                    Gizmos.DrawLine(point2, point4);
+                    point1 = point3;
+                    point2 = point4;
+                }
+            }
+            catch
+            {
+                //ignored
+            }
         }
     }
 }

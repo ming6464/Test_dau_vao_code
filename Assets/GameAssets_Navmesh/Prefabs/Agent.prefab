@@ -215,11 +215,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   index: 0
   NavAgent: {fileID: 7768823422269443853}
-  ReachDistance: 0
+  ReachDistance: 1.4
   RemainingDistance: 0
   ID: 0
   myTrans: {fileID: 0}
   Radius: 0
+  forward: {x: 0, y: 0, z: 0}
   radiusCheckFieldOfView: 0
   fieldOfView: 0
   densityDraw: 0

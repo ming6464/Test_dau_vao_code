@@ -24,11 +24,18 @@ public class AgentFlock : MonoBehaviour
     public float radiusCheckFieldOfView;
     public float fieldOfView;
     public float densityDraw;
+    public string animRunName;
+    public string animIdleName;
+    public bool useRootMotion;
+    public float steeringAngle;
 
     public Color colorStop;
     public Color colorRun;
     private Color myColor;
-    private Vector3 Destination;
+    private Vector3 Destination = Vector3.zero;
+    private int _animRunHashName;
+    private int _animRunIdleName;
+    private Animator _animator;
 
     private void Awake()
     {
@@ -42,10 +49,13 @@ public class AgentFlock : MonoBehaviour
         myTrans = transform;
         ID = myTrans.GetInstanceID();
         myColor = colorRun;
+        _animator = GetComponent<Animator>();
     }
 
     private void OnEnable()
     {
+        _animRunHashName = Animator.StringToHash(animRunName);
+        _animRunIdleName = Animator.StringToHash(animIdleName);
         EventDispatcher.Instance.RegisterListener(EventID.RightClick, OnRightClick);
         EventDispatcher.Instance.RegisterListener(EventID.LeftClick, OnLeftClick);
     }
@@ -73,6 +83,12 @@ public class AgentFlock : MonoBehaviour
         if (NavAgent.isOnNavMesh)
         {
             NavAgent.isStopped = true;
+        }
+
+        if (useRootMotion)
+        {
+            NavAgent.angularSpeed = 360;
+            NavAgent.speed = 0;
         }
 
         if (FlockManager.Instance)
@@ -112,11 +128,33 @@ public class AgentFlock : MonoBehaviour
         {
             _flockManager.EditPriority(false, index, ID);
             NavAgent.ResetPath();
+            if (useRootMotion)
+            {
+                CrossAnim(_animRunHashName);
+            }
         }
         else
         {
             _flockManager.EditPriority(true, index, ID);
         }
+
+        try
+        {
+            RotateToWard(NavAgent.steeringTarget);
+        }
+        catch
+        {
+            //ignored
+        }
+    }
+
+    private void RotateToWard(Vector3 lookAt)
+    {
+        var rota = Quaternion.LookRotation(lookAt - transform.position).eulerAngles;
+        rota.x = 0;
+        rota.z = 0;
+        transform.rotation =
+            Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(rota), steeringAngle * Time.deltaTime);
     }
 
     public void SetTeam(int team)
@@ -126,12 +164,33 @@ public class AgentFlock : MonoBehaviour
 
     public void HandleStop(bool isStop)
     {
-        if (NavAgent.isOnNavMesh)
+        if (Destination == Vector3.zero || !NavAgent.hasPath)
+        {
+            if (useRootMotion)
+            {
+                CrossAnim(_animRunIdleName);
+            }
+
+            return;
+        }
+
+        if (useRootMotion)
+        {
+            CrossAnim(isStop ? _animRunIdleName : _animRunHashName);
+        }
+        else if (NavAgent.isOnNavMesh)
         {
             NavAgent.isStopped = isStop;
         }
 
+
         myColor = isStop ? colorStop : colorRun;
+    }
+
+    private void CrossAnim(int hash, float crossHash = .2f)
+    {
+        if (_animator.IsInTransition(0)) return;
+        _animator.CrossFade(hash, crossHash);
     }
 
     private async void DelayToRenderComplete(Vector3 destination)

@@ -4138,15 +4138,15 @@ MonoBehaviour:
   _population: 1000
   _speed: 2
   _avoidDistance: 1
-  _teamCapacity: 1
+  _teamCapacity: 5
   _destination: {x: -42.25, y: -0.81, z: 146.17}
-  _distanceStartCheck: 34.71
+  _distanceStartCheck: 88.39
   _fieldOfView: 180
   _radiusCheckFieldOfView: 3.67
-  _densityCheck: 6
+  _densityCheck: 9
   _densityDraw: 1
-  _countApplyVelocity: 10
-  _indexMax: 84
+  _countApplyVelocity: 5
+  _indexMax: 0
 --- !u!4 &344646650
 Transform:
   m_ObjectHideFlags: 0
@@ -4184,7 +4184,7 @@ MonoBehaviour:
   - {fileID: 443876856}
   - {fileID: 944664516}
   - {fileID: 1201040100}
-  PrefabSpawm: {fileID: 7768823422269443854, guid: bc39136d574600a4988d350a1cdf4471, type: 3}
+  PrefabSpawm: {fileID: 4609793102162596205, guid: 10991f7c4f3310045a4398fcaea35963, type: 3}
   SpawmCount: 500
   Run: 0
 --- !u!114 &344646652
@@ -4199,7 +4199,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a67c967d7ed4a143a45d2459dbd1475, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TimeScale: 1
+  TimeScale: 0.237
 --- !u!114 &344646653
 MonoBehaviour:
   m_ObjectHideFlags: 0
